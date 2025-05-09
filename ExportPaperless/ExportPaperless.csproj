@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.15" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Clients\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\ExportPaperless.Domain\ExportPaperless.Domain.csproj" />
+      <ProjectReference Include="..\ExportPaperless.PaperlessApi\ExportPaperless.PaperlessApi.csproj" />
+      <ProjectReference Include="..\ExportPaperless.Rest\ExportPaperless.Rest.csproj" />
+    </ItemGroup>
+
+</Project>

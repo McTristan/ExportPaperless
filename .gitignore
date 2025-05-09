@@ -1,0 +1,6 @@
+.env*
+bin/
+obj/
+.DotSettings.user
+.idea/
+.vs/

@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExportPaperless", "ExportPaperless\ExportPaperless.csproj", "{9BEC7CDE-01DB-4F41-BE99-A9B420159FBD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExportPaperless.Domain", "ExportPaperless.Domain\ExportPaperless.Domain.csproj", "{687834FE-8189-4705-B27A-74EDF73EC02B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExportPaperless.PaperlessApi", "ExportPaperless.PaperlessApi\ExportPaperless.PaperlessApi.csproj", "{8D5A8436-2DA2-4493-81CA-E5DDDC154D05}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExportPaperless.Rest", "ExportPaperless.Rest\ExportPaperless.Rest.csproj", "{E371A881-E210-40C1-8260-EADA988E6CB4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9BEC7CDE-01DB-4F41-BE99-A9B420159FBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BEC7CDE-01DB-4F41-BE99-A9B420159FBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BEC7CDE-01DB-4F41-BE99-A9B420159FBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BEC7CDE-01DB-4F41-BE99-A9B420159FBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{687834FE-8189-4705-B27A-74EDF73EC02B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{687834FE-8189-4705-B27A-74EDF73EC02B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{687834FE-8189-4705-B27A-74EDF73EC02B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{687834FE-8189-4705-B27A-74EDF73EC02B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D5A8436-2DA2-4493-81CA-E5DDDC154D05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D5A8436-2DA2-4493-81CA-E5DDDC154D05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D5A8436-2DA2-4493-81CA-E5DDDC154D05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D5A8436-2DA2-4493-81CA-E5DDDC154D05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E371A881-E210-40C1-8260-EADA988E6CB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E371A881-E210-40C1-8260-EADA988E6CB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E371A881-E210-40C1-8260-EADA988E6CB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E371A881-E210-40C1-8260-EADA988E6CB4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
