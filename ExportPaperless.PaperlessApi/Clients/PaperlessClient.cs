@@ -75,7 +75,7 @@ public class PaperlessClient(IHttpClientFactory httpClientFactory) : IPaperlessC
                 nextUrl = nextUrl.TrimStart('/');
             }
         }
-        return fullDocs;
+        return fullDocs.OrderBy(f => f.Created).ToList();
     }
     
     private async Task<Dictionary<int, string>> GetLookup(string endpoint)
