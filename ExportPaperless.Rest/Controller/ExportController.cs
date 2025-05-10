@@ -9,7 +9,7 @@ namespace ExportPaperless.Rest.Controller;
 public class ExportController(IPaperlessClient client, IExcelExportService excelService, IZipService zipService)
     : ControllerBase
 {
-    [HttpGet("export")]
+    [HttpGet("")]
     public async Task<IActionResult> Export([FromQuery] DateTime from, [FromQuery] DateTime to,
         [FromQuery] List<string> includeTags, [FromQuery] List<string> excludeTags,
         [FromQuery] List<string> includeDocumentTypes,
@@ -22,7 +22,7 @@ public class ExportController(IPaperlessClient client, IExcelExportService excel
         return File(zipBytes, "application/zip", "export.zip");
     }
 
-    [HttpGet("export/view/{id}")]
+    [HttpGet("view/{id}")]
     public async Task<IActionResult> ExportView([FromRoute] int id, CancellationToken cancellationToken)
     {
         var customFields = await client.GetCustomFieldsFromView(id, cancellationToken);
