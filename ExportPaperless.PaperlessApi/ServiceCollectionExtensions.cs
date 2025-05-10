@@ -18,7 +18,6 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient("Paperless", client =>
         {
             client.BaseAddress = paperlessConfigurationService.BaseAddress;
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Token", paperlessConfigurationService.Token);
         });
         
         services.AddTransient<IPaperlessClient, PaperlessClient>();

@@ -1,12 +1,26 @@
 using System.IO.Compression;
+using System.Net.Http.Headers;
 using ExportPaperless.Domain.Entities;
 using ExportPaperless.Domain.Services;
+using Microsoft.AspNetCore.Http;
 
 namespace ExportPaperless.PaperlessApi.Services;
 
-public class ZipService(IHttpClientFactory clientFactory) : IZipService
+public class ZipService : IZipService
 {
-    private readonly HttpClient _httpClient = clientFactory.CreateClient("Paperless");
+    private readonly HttpClient _httpClient;
+
+    public ZipService(IHttpContextAccessor contextAccessor, IPaperlessConfigurationService configurationService, IHttpClientFactory clientFactory)
+    {
+        _httpClient = clientFactory.CreateClient("Paperless");
+        var token = contextAccessor.HttpContext?.Request.Headers["x-api-key"];
+        if (string.IsNullOrEmpty(token))
+        {
+            token = configurationService.Token;
+        }
+        
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Token", token);
+    }
 
     public async Task<byte[]> CreateZipWithDocuments(List<PaperlessDocument> docs, Stream excelStream, CancellationToken cancellationToken)
     {

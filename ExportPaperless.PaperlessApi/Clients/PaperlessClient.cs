@@ -1,15 +1,31 @@
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using ExportPaperless.Domain.Clients;
 using ExportPaperless.Domain.Entities;
 using ExportPaperless.Domain.Services;
 using ExportPaperless.PaperlessApi.DataContracts;
+using Microsoft.AspNetCore.Http;
 
 namespace ExportPaperless.PaperlessApi.Clients;
 
-public class PaperlessClient(IHttpClientFactory httpClientFactory, IPaperlessConfigurationService configurationService) : IPaperlessClient
+public class PaperlessClient : IPaperlessClient
 {
-    private readonly HttpClient _httpClient = httpClientFactory.CreateClient("Paperless");
+    private readonly HttpClient _httpClient;
+    private readonly IPaperlessConfigurationService _configurationService;
+
+    public PaperlessClient(IHttpContextAccessor contextAccessor, IHttpClientFactory httpClientFactory, IPaperlessConfigurationService configurationService)
+    {
+        _configurationService = configurationService;
+        _httpClient = httpClientFactory.CreateClient("Paperless");
+        var token = contextAccessor.HttpContext?.Request.Headers["x-api-key"];
+        if (string.IsNullOrEmpty(token))
+        {
+            token = configurationService.Token;
+        }
+        
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Token", token);
+    }
 
     public async Task<List<PaperlessDocument>> GetDocuments(DateTime from, DateTime to, List<string> includeTags, 
         List<string> excludeTags, List<string> includeDocumentTypes, List<string> includeCustomFields, CancellationToken cancellationToken)
@@ -76,7 +92,7 @@ public class PaperlessClient(IHttpClientFactory httpClientFactory, IPaperlessCon
                     }
                 }
 
-                var url = new Uri(configurationService.PublicAddress, $"documents/{doc.Id}/details");
+                var url = new Uri(_configurationService.PublicAddress, $"documents/{doc.Id}/details");
                 var paperlessDocument = new PaperlessDocument(doc.Id, doc.Title,
                     string.IsNullOrEmpty(doc.FileName) ? doc.OriginalFileName : doc.FileName, doc.Created,
                     correspondent, documentType, namedTags?.ToArray(), doc.Notes?.Select(n => n.Note).ToArray(),

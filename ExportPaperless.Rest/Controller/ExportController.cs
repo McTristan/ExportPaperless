@@ -1,11 +1,13 @@
 using ExportPaperless.Domain.Clients;
 using ExportPaperless.Domain.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ExportPaperless.Rest.Controller;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(AuthenticationSchemes = "ApiKeyScheme")]
 public class ExportController(IPaperlessClient client, IExcelExportService excelService, IZipService zipService)
     : ControllerBase
 {
