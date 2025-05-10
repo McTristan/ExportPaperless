@@ -2,11 +2,12 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using ExportPaperless.Domain.Clients;
 using ExportPaperless.Domain.Entities;
+using ExportPaperless.Domain.Services;
 using ExportPaperless.PaperlessApi.DataContracts;
 
 namespace ExportPaperless.PaperlessApi.Clients;
 
-public class PaperlessClient(IHttpClientFactory httpClientFactory) : IPaperlessClient
+public class PaperlessClient(IHttpClientFactory httpClientFactory, IPaperlessConfigurationService configurationService) : IPaperlessClient
 {
     private readonly HttpClient _httpClient = httpClientFactory.CreateClient("Paperless");
 
@@ -61,9 +62,11 @@ public class PaperlessClient(IHttpClientFactory httpClientFactory) : IPaperlessC
                     }
                 }
 
+                var url = new Uri(configurationService.PublicAddress, $"documents/{doc.Id}/details");
                 var paperlessDocument = new PaperlessDocument(doc.Id, doc.Title,
                     string.IsNullOrEmpty(doc.FileName) ? doc.OriginalFileName : doc.FileName, doc.Created,
-                    correspondent, documentType, namedTags?.ToArray(), doc.Notes?.Select(n => n.Note).ToArray(), namedCustomFields);
+                    correspondent, documentType, namedTags?.ToArray(), doc.Notes?.Select(n => n.Note).ToArray(),
+                    namedCustomFields, url);
                
                 fullDocs.Add(paperlessDocument);
             }

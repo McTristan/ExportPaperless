@@ -12,7 +12,7 @@ A .NET 8 Web API that integrates with [Paperless-ngx](https://github.com/paperle
 - Resolves related entities like:
   - Correspondents
   - Document types
-  - Custom fields (user-defined)
+  - Custom fields (user-defined - specify them in the query if you want to have them in the resulting excel file)
 - Generates a well-structured Excel file (via OpenXML SDK)
 - Bundles Excel + documents into a ZIP file
 - Exposes a single, simple HTTP endpoint:

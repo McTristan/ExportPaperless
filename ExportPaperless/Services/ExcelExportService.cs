@@ -10,6 +10,10 @@ namespace ExportPaperless.Services;
 
 public class ExcelExportService(IExcelExportConfigurationService configurationService) : IExcelExportService
 {
+    public const uint CELL_STYLE_DATE = 1;
+    public const uint CELL_STYLE_NUMBER = 2;
+    public const uint CELL_STYLE_URL = 3;
+    
     public MemoryStream GenerateExcel(List<PaperlessDocument> documents, List<string> customFields)
     {
         var stream = new MemoryStream();
@@ -42,7 +46,9 @@ public class ExcelExportService(IExcelExportConfigurationService configurationSe
                 new Cell { CellValue = new CellValue("Tags"), DataType = CellValues.String },
                 new Cell { CellValue = new CellValue("Correspondent"), DataType = CellValues.String },
                 new Cell { CellValue = new CellValue("Notes"), DataType = CellValues.String },
-                new Cell { CellValue = new CellValue("Document Type"), DataType = CellValues.String }
+                new Cell { CellValue = new CellValue("Document Type"), DataType = CellValues.String },
+                new Cell { CellValue = new CellValue("Filename"), DataType = CellValues.String},
+                new Cell { CellValue = new CellValue("URL"), DataType = CellValues.String}
             );
             foreach (var fieldName in customFields)
             {
@@ -71,8 +77,13 @@ public class ExcelExportService(IExcelExportConfigurationService configurationSe
                         CellValue = new CellValue(string.Join(", ", doc.Notes ?? [])),
                         DataType = CellValues.String
                     },
-                    new Cell { CellValue = new CellValue(doc.DocumentType ?? ""), DataType = CellValues.String }
-                );
+                    new Cell { CellValue = new CellValue(doc.DocumentType ?? ""), DataType = CellValues.String },
+                    new Cell { CellValue = new CellValue(doc.FileName), DataType = CellValues.String });
+                
+                var urlCell = new Cell();
+                FormatCellAsHyperlink(doc.Url.ToString(), urlCell);
+                row.Append(urlCell);
+                
                 foreach (var fieldName in customFields)
                 {
                     JsonElement? value = null;
@@ -149,15 +160,23 @@ public class ExcelExportService(IExcelExportConfigurationService configurationSe
         cell.CellValue = new CellValue(excelDate);
         cell.DataType = CellValues.Number;
         // set the custom date format
-        cell.StyleIndex = 1;
+        cell.StyleIndex = CELL_STYLE_DATE;
     }
 
+    private static void FormatCellAsHyperlink(string url, Cell cell)
+    {
+        cell.CellValue = new CellValue(url);
+        cell.DataType = CellValues.String;
+        cell.CellFormula = new CellFormula($"HYPERLINK(\"{url}\",\"{url}\")");
+        cell.StyleIndex = CELL_STYLE_URL;
+    }
+    
     private static void FormatCellAsNumber(double numberValue, Cell cell)
     {
         cell.CellValue = new CellValue(numberValue.ToString("0.##"));
         cell.DataType = CellValues.Number;
         // set the custom number format
-        cell.StyleIndex = 2;
+        cell.StyleIndex = CELL_STYLE_NUMBER;
     }
     
     private void AddStyles(WorkbookPart workbookPart)
@@ -223,10 +242,25 @@ public class ExcelExportService(IExcelExportConfigurationService configurationSe
             NumberFormatId = numberingFormat.NumberFormatId,
             ApplyNumberFormat = BooleanValue.FromBoolean(true)
         };
-
         stylesheet.CellFormats.AppendChild(numberFormat);
         
-        stylesheet.CellFormats.Count = 3; // Default + Date format + Number format
+        // Define the URL format
+        var font = new Font(
+            new Color { Theme = 10U },
+            new Underline { Val = UnderlineValues.Single }
+        );
+    
+        stylesheet.Fonts.AppendChild(font);
+    
+        var cellFormat = new CellFormat
+        {
+            FontId = stylesheet.Fonts.Count - 1,
+            ApplyFont = true
+        };
+    
+        stylesheet.CellFormats.AppendChild(cellFormat);
+        
+        stylesheet.CellFormats.Count = 4; // Default + Date format + Number format + URL format
     }
     
     private bool IsCurrencyString(string value)

@@ -21,6 +21,20 @@ public class PaperlessConfigurationService(IConfiguration configuration) : IPape
         }
     }
 
+    public Uri PublicAddress
+    {
+        get
+        {
+            var publicAddress = _section["PUBLIC_URL"];
+            if (string.IsNullOrEmpty(publicAddress))
+            {
+                throw new InvalidOperationException("PUBLIC_URL variable is not set (appsettings.json), you can also use an environment variable in the format: PAPERLESS__PUBLIC_URL=https://mypaperless.domain.org");
+            }
+            
+            return new Uri(publicAddress);
+        }
+    }
+
     public string Token
     {
         get
