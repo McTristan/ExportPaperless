@@ -6,7 +6,7 @@ public static class Configuration
     {
         var configurationBuilder = new ConfigurationBuilder();
         configurationBuilder.AddJsonFile("appsettings.json", true, true);
-        configurationBuilder.AddEnvironmentVariables("PE_");
+        configurationBuilder.AddEnvironmentVariables();
         ReadDotEnvFile(maxTraverseDepth: 3);
         return configurationBuilder.Build();
     }

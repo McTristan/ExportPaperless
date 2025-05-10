@@ -12,6 +12,7 @@ public static class Registry
         services.AddSingleton(configuration);
         services.AddPaperlessApi(configuration);
         services.AddTransient<IExcelExportService, ExcelExportService>();
+        services.AddTransient<IExcelExportConfigurationService, ExcelExportConfigurationService>();
 
         services.AddControllers();
     }

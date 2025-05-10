@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace ExportPaperless.PaperlessApi.DataContracts;
 
 using System.Text.Json.Serialization;
@@ -9,7 +11,7 @@ public class CustomFieldValueDto
     public int Field { get; set; }
     
     [JsonPropertyName("value")]
-    public object Value { get; set; } = string.Empty;
+    public JsonElement? Value { get; set; }
     
     [JsonIgnore]
     public string? Name { get; set; }

@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace ExportPaperless.Domain.Entities;
 
 public class PaperlessDocument(
@@ -9,7 +11,7 @@ public class PaperlessDocument(
     string? documentType,
     string[]? tags,
     string[]? notes,
-    Dictionary<string, object> customFields)
+    Dictionary<string, JsonElement?> customFields)
 {
     public int Id { get; } = id;
     public string Title { get; } = title;
@@ -19,5 +21,5 @@ public class PaperlessDocument(
     public string? Correspondent { get; } = correspondent;
     public string? DocumentType { get; } = documentType;
     public List<string>? Notes { get; } = notes?.ToList();
-    public Dictionary<string, object>? CustomFields { get; } = customFields;
+    public Dictionary<string, JsonElement?>? CustomFields { get; } = customFields;
 }

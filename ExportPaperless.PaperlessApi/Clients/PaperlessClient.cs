@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using ExportPaperless.Domain.Clients;
 using ExportPaperless.Domain.Entities;
 using ExportPaperless.PaperlessApi.DataContracts;
@@ -50,7 +51,7 @@ public class PaperlessClient(IHttpClientFactory httpClientFactory) : IPaperlessC
                 var correspondent = doc.CorrespondentId.HasValue ? correspondents[doc.CorrespondentId.Value] : "";
                 var documentType = doc.DocumentTypeId.HasValue ? docTypes[doc.DocumentTypeId.Value] : "";
                 var namedTags = doc.Tags?.Select(tag => tags.FirstOrDefault(f => f.Key == tag).Value).ToList();
-                var namedCustomFields = new Dictionary<string, object>();
+                var namedCustomFields = new Dictionary<string, JsonElement?>();
                 if (doc.CustomFields != null)
                 {
                     foreach (var field in doc.CustomFields)

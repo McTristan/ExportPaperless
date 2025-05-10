@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text.Json;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
@@ -6,7 +8,7 @@ using ExportPaperless.Domain.Services;
 
 namespace ExportPaperless.Services;
 
-public class ExcelExportService : IExcelExportService
+public class ExcelExportService(IExcelExportConfigurationService configurationService) : IExcelExportService
 {
     public MemoryStream GenerateExcel(List<PaperlessDocument> documents, List<string> customFields)
     {
@@ -16,13 +18,15 @@ public class ExcelExportService : IExcelExportService
             var workbookPart = spreadsheet.AddWorkbookPart();
             workbookPart.Workbook = new Workbook();
 
+            AddStyles(workbookPart);
+
             var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
             worksheetPart.Worksheet = new Worksheet(new SheetData());
 
-            var sheets = spreadsheet.WorkbookPart.Workbook.AppendChild(new Sheets());
+            var sheets = workbookPart.Workbook.AppendChild(new Sheets());
             var sheet = new Sheet
             {
-                Id = spreadsheet.WorkbookPart.GetIdOfPart(worksheetPart),
+                Id = workbookPart.GetIdOfPart(worksheetPart),
                 SheetId = 1,
                 Name = "Documents"
             };
@@ -45,32 +49,91 @@ public class ExcelExportService : IExcelExportService
                 header.Append(new Cell { CellValue = new CellValue(fieldName), DataType = CellValues.String });
             }
 
-            sheetData.Append(header);
+            sheetData?.Append(header);
 
             foreach (var doc in documents)
             {
                 var row = new Row();
+                row.Append(new Cell { CellValue = new CellValue(doc.Title), DataType = CellValues.String });
+                var createdDateCell = new Cell();
+                FormatCellAsDate(doc.Created, createdDateCell);
+                row.Append(createdDateCell);
+
                 row.Append(
-                    new Cell { CellValue = new CellValue(doc.Title), DataType = CellValues.String },
                     new Cell
                     {
-                        CellValue = new CellValue(doc.Created.ToString("yyyy-MM-dd")), DataType = CellValues.String
+                        CellValue = new CellValue(string.Join(", ", doc.Tags ?? [])),
+                        DataType = CellValues.String
                     },
-                    new Cell { CellValue = new CellValue(string.Join(", ", doc.Tags ?? new List<string>())), DataType = CellValues.String },
                     new Cell { CellValue = new CellValue(doc.Correspondent ?? ""), DataType = CellValues.String },
-                    new Cell { CellValue = new CellValue(string.Join(", ", doc.Notes ?? new List<string>())), DataType = CellValues.String },
+                    new Cell
+                    {
+                        CellValue = new CellValue(string.Join(", ", doc.Notes ?? [])),
+                        DataType = CellValues.String
+                    },
                     new Cell { CellValue = new CellValue(doc.DocumentType ?? ""), DataType = CellValues.String }
                 );
                 foreach (var fieldName in customFields)
                 {
-                    doc.CustomFields?.TryGetValue(fieldName, out var value);
-                    
-                    //row.Append(new Cell
-                    //    { CellValue = new CellValue(value ?? string.Empty), DataType = CellValues.String });
-                    row.Append(new Cell());
+                    JsonElement? value = null;
+                    doc.CustomFields?.TryGetValue(fieldName, out value);
+
+                    if (value == null)
+                    {
+                        row.Append(new Cell());
+                        continue;
+                    }
+
+                    var cell = new Cell();
+
+                    switch (value.Value.ValueKind)
+                    {
+                        case JsonValueKind.String:
+                            var strValue = value.Value.GetString();
+                            if (strValue == null)
+                            {
+                                break;
+                            }
+                            
+                            // first try to parse as date
+                            if (DateTime.TryParse(strValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateValue))
+                            {
+                                FormatCellAsDate(dateValue, cell);
+                                break;
+                            }
+                            
+                            if (configurationService.StripCurrency && IsCurrencyString(strValue))
+                            {
+                                var cleanValue = new string(strValue.Where(c => char.IsDigit(c) || c == '.' || c == ',' || c == '-').ToArray());
+        
+                                if (double.TryParse(cleanValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var numericValue))
+                                {
+                                    FormatCellAsNumber(numericValue, cell);;
+                                    break;
+                                }
+                            }
+
+                            cell.CellValue = new CellValue(value.ToString()!);
+                            cell.DataType = CellValues.String;
+                            break;
+                        
+                        case JsonValueKind.Number:
+                            if (value.Value.TryGetDouble(out var doubleValue))
+                            {
+                                FormatCellAsNumber(doubleValue, cell);
+                            }
+                            break;
+                     
+                        default:
+                            cell.CellValue = new CellValue(value.Value.ToString()!);
+                            cell.DataType = CellValues.String;
+                            break;
+                    }
+
+                    row.Append(cell);
                 }
 
-                sheetData.Append(row);
+                sheetData?.Append(row);
             }
 
             workbookPart.Workbook.Save();
@@ -78,5 +141,97 @@ public class ExcelExportService : IExcelExportService
 
         stream.Position = 0;
         return stream;
+    }
+
+    private static void FormatCellAsDate(DateTime dateValue, Cell cell)
+    {
+        var excelDate = dateValue.ToOADate();
+        cell.CellValue = new CellValue(excelDate);
+        cell.DataType = CellValues.Number;
+        // set the custom date format
+        cell.StyleIndex = 1;
+    }
+
+    private static void FormatCellAsNumber(double numberValue, Cell cell)
+    {
+        cell.CellValue = new CellValue(numberValue.ToString("0.##"));
+        cell.DataType = CellValues.Number;
+        // set the custom number format
+        cell.StyleIndex = 2;
+    }
+    
+    private void AddStyles(WorkbookPart workbookPart)
+    {
+        var workbookStylesPart = workbookPart.AddNewPart<WorkbookStylesPart>();
+        workbookStylesPart.Stylesheet = new Stylesheet();
+
+        var stylesheet = workbookStylesPart.Stylesheet;
+
+        // Initialize NumberingFormats
+        stylesheet.NumberingFormats = new NumberingFormats();
+
+        // Initialize Fonts (at least one is required)
+        stylesheet.Fonts = new Fonts(new Font())
+        {
+            Count = 1
+        };
+
+        // Initialize Fills (at least one is required)
+        stylesheet.Fills = new Fills(new Fill(new PatternFill { PatternType = PatternValues.None }))
+        {
+            Count = 1
+        };
+
+        // Initialize Borders (at least one is required)
+        stylesheet.Borders = new Borders(new Border())
+        {
+            Count = 1
+        };
+
+        // Initialize CellFormats
+        stylesheet.CellFormats = new CellFormats();
+
+        // Add default format (required)
+        stylesheet.CellFormats.AppendChild(new CellFormat());
+
+        // Define the date format
+        var numberingFormat = new NumberingFormat
+        {
+            NumberFormatId = UInt32Value.FromUInt32(164), // Custom format IDs must be >= 164
+            FormatCode = StringValue.FromString(configurationService.DateFormat)
+        };
+        stylesheet.NumberingFormats.AppendChild(numberingFormat);
+        // Create a new CellFormat with the date format
+        var dateFormat = new CellFormat
+        {
+            NumberFormatId = numberingFormat.NumberFormatId,
+            ApplyNumberFormat = BooleanValue.FromBoolean(true)
+        };
+
+        stylesheet.CellFormats.AppendChild(dateFormat);
+        
+        // Define the number format
+        numberingFormat = new NumberingFormat
+        {
+            NumberFormatId = UInt32Value.FromUInt32(165), // Custom format IDs must be >= 164
+            FormatCode = StringValue.FromString(configurationService.NumberFormat)
+        };
+        stylesheet.NumberingFormats.AppendChild(numberingFormat);
+        // Create a new CellFormat with the date format
+        var numberFormat = new CellFormat
+        {
+            NumberFormatId = numberingFormat.NumberFormatId,
+            ApplyNumberFormat = BooleanValue.FromBoolean(true)
+        };
+
+        stylesheet.CellFormats.AppendChild(numberFormat);
+        
+        stylesheet.CellFormats.Count = 3; // Default + Date format + Number format
+    }
+    
+    private bool IsCurrencyString(string value)
+    {
+        return value.StartsWith("EUR", StringComparison.OrdinalIgnoreCase) || 
+               value.StartsWith("USD", StringComparison.OrdinalIgnoreCase);
     }
 }
