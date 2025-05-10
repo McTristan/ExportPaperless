@@ -12,7 +12,7 @@ public class PaperlessClient(IHttpClientFactory httpClientFactory, IPaperlessCon
     private readonly HttpClient _httpClient = httpClientFactory.CreateClient("Paperless");
 
     public async Task<List<PaperlessDocument>> GetDocuments(DateTime from, DateTime to, List<string> includeTags, 
-        List<string> excludeTags, List<string> includeDocumentTypes, List<string> fields, CancellationToken cancellationToken)
+        List<string> excludeTags, List<string> includeDocumentTypes, List<string> includeCustomFields, CancellationToken cancellationToken)
     {
         var baseUrl = $"documents/?created__gte={from:yyyy-MM-dd}&created__lte={to:yyyy-MM-dd}";
         var includeTagIds = await GetIdsFromNames(includeTags, "tags");
@@ -33,6 +33,20 @@ public class PaperlessClient(IHttpClientFactory httpClientFactory, IPaperlessCon
         {
             baseUrl += $"&document_type__id__in={includedDocumentTypesQuery}";
         }
+        
+        var includeCustomFieldIds = await GetIdsFromNames(includeCustomFields, "custom_fields");
+        var includeCustomFieldQuery = string.Join(",", includeCustomFieldIds.Select(id => id.ToString()));
+        if (!string.IsNullOrEmpty(includeCustomFieldQuery))
+        {
+            baseUrl += $"&custom_fields__id__all={includeCustomFieldQuery}";
+        }
+
+        var fullDocs = await FilterDocuments(cancellationToken, baseUrl);
+        return fullDocs.OrderBy(f => f.Created).ToList();
+    }
+
+    private async Task<List<PaperlessDocument>> FilterDocuments(CancellationToken cancellationToken, string baseUrl)
+    {
         var fullDocs = new List<PaperlessDocument>();
         var nextUrl = baseUrl;
 
@@ -78,9 +92,105 @@ public class PaperlessClient(IHttpClientFactory httpClientFactory, IPaperlessCon
                 nextUrl = nextUrl.TrimStart('/');
             }
         }
-        return fullDocs.OrderBy(f => f.Created).ToList();
+
+        return fullDocs;
     }
-    
+
+    public async Task<List<string>> GetCustomFieldsFromView(int viewId, CancellationToken cancellationToken)
+    {
+        var view = await _httpClient.GetFromJsonAsync<SavedViewDto?>($"saved_views/{viewId}/", cancellationToken);
+        if (view == null)
+        {
+            throw new InvalidOperationException($"View with id {viewId} not found");
+        }
+
+        var values = view.FilterRules.Where(fr => fr.Type is RuleType.HasCustomField or RuleType.HasTheseCustomFields)
+            .Select(f => int.Parse(f.Value)).ToList();
+        values.AddRange(view.DisplayFields
+            .Where(df => df.StartsWith("custom_field_", StringComparison.OrdinalIgnoreCase))
+            .Select(df => int.Parse(df.Replace("custom_field_", ""))));
+        
+        var customFields = await GetLookup("custom_fields");
+        return values.Select(v => customFields[v]).ToList();
+    }
+
+    public async Task<List<PaperlessDocument>> GetDocumentsFromView(int viewId, CancellationToken cancellationToken)
+    {
+        var view = await _httpClient.GetFromJsonAsync<SavedViewDto?>($"saved_views/{viewId}/", cancellationToken);
+        if (view == null)
+        {
+            throw new InvalidOperationException($"View with id {viewId} not found");
+        }
+        
+        var baseUrl = $"documents/";
+
+        var filterRulesGroup = view.FilterRules.GroupBy(fr => fr.Type);
+        foreach (var filterRuleGroup in filterRulesGroup)
+        {
+            switch (filterRuleGroup.Key)
+            {
+                case RuleType.HasTag:
+                    var includedTagsQuery = string.Join(",",
+                        filterRuleGroup.Select(fr => int.Parse(fr.Value)).ToList().Select(id => id.ToString()));
+                    if (!string.IsNullOrEmpty(includedTagsQuery))
+                    {
+                        baseUrl = QueryPrefix(baseUrl);
+                        baseUrl += $"tags__id__all={includedTagsQuery}";
+                    }
+                    break;
+                case RuleType.HasNotTag:
+                    var excludedTagsQuery = string.Join(",",
+                        filterRuleGroup.Select(fr => int.Parse(fr.Value)).ToList().Select(id => id.ToString()));
+                    if (!string.IsNullOrEmpty(excludedTagsQuery))
+                    {
+                        baseUrl = QueryPrefix(baseUrl);
+                        baseUrl += $"tags__id__none={excludedTagsQuery}";
+                    }
+                    break;
+                case RuleType.DocumentTypeIs:
+                    var documentTypesQuery = string.Join(",",
+                        filterRuleGroup.Select(fr => int.Parse(fr.Value)).ToList().Select(id => id.ToString()));
+                    if (!string.IsNullOrEmpty(documentTypesQuery))
+                    {
+                        baseUrl = QueryPrefix(baseUrl);
+                        baseUrl += $"document_type__id__in={documentTypesQuery}";
+                    }
+                    break;
+                case RuleType.CreatedFrom:
+                    baseUrl = QueryPrefix(baseUrl);
+                    baseUrl += $"created__date__gte={filterRuleGroup.First().Value}";
+                    break;
+                case RuleType.CreatedTo:
+                    baseUrl = QueryPrefix(baseUrl);
+                    baseUrl += $"created__date__lte={filterRuleGroup.First().Value}";
+                    break;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(view.Sort))
+        {
+            baseUrl = QueryPrefix(baseUrl);
+            var sortDirection = view.SortDescending ? "-" : "";
+            baseUrl += $"ordering={sortDirection}{view.Sort}";
+        }
+        
+        return await FilterDocuments(cancellationToken, baseUrl);
+    }
+
+    private static string QueryPrefix(string baseUrl)
+    {
+        if (baseUrl.Contains('?'))
+        {
+            baseUrl += "&";
+        }
+        else
+        {
+            baseUrl += "?";
+        }
+
+        return baseUrl;
+    }
+
     private async Task<Dictionary<int, string>> GetLookup(string endpoint)
     {
         var results = new List<LookupEntryDto>();
