@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using ExportPaperless.Domain;
 using ExportPaperless.Domain.Clients;
 using ExportPaperless.Domain.Entities;
 using ExportPaperless.Domain.Services;
@@ -61,6 +62,26 @@ public class PaperlessClient : IPaperlessClient
         return fullDocs.OrderBy(f => f.Created).ToList();
     }
 
+    private async Task<Dictionary<int, string>> GetCustomFieldNamesForSavedView(SavedViewDto viewDto, CancellationToken cancellationToken)
+    {
+        var customFields = await GetLookup("custom_fields", cancellationToken);
+        var fieldIdToNames = new Dictionary<int, string>();
+
+        foreach (var filterRule in viewDto.FilterRules.Where(fr => fr.Type is RuleType.HasCustomField or RuleType.HasTheseCustomFields))
+        {
+            var customFieldId = int.Parse(filterRule.Value);
+            fieldIdToNames[customFieldId] = customFields[customFieldId];
+        }
+
+        foreach (var displayField in viewDto.DisplayFields.Where(df => df.StartsWith("custom_field_", StringComparison.OrdinalIgnoreCase))) 
+        {
+            var customFieldId = int.Parse(displayField.Replace("custom_field_", ""));
+            fieldIdToNames[customFieldId] = customFields[customFieldId];
+        }
+
+        return fieldIdToNames;
+    }
+
     private async Task<List<PaperlessDocument>> FilterDocuments(CancellationToken cancellationToken, string baseUrl)
     {
         var fullDocs = new List<PaperlessDocument>();
@@ -96,7 +117,7 @@ public class PaperlessClient : IPaperlessClient
                 var paperlessDocument = new PaperlessDocument(doc.Id, doc.Title,
                     string.IsNullOrEmpty(doc.FileName) ? doc.OriginalFileName : doc.FileName, doc.Created,
                     correspondent, documentType, namedTags?.ToArray(), doc.Notes?.Select(n => n.Note).ToArray(),
-                    namedCustomFields, url);
+                    namedCustomFields, doc.PageCount, url);
                
                 fullDocs.Add(paperlessDocument);
             }
@@ -112,35 +133,13 @@ public class PaperlessClient : IPaperlessClient
         return fullDocs;
     }
 
-    public async Task<List<string>> GetCustomFieldsFromView(int viewId, CancellationToken cancellationToken)
-    {
-        var view = await _httpClient.GetFromJsonAsync<SavedViewDto?>($"saved_views/{viewId}/", cancellationToken);
-        if (view == null)
-        {
-            throw new InvalidOperationException($"View with id {viewId} not found");
-        }
-
-        var values = view.FilterRules.Where(fr => fr.Type is RuleType.HasCustomField or RuleType.HasTheseCustomFields)
-            .Select(f => int.Parse(f.Value)).ToList();
-        values.AddRange(view.DisplayFields
-            .Where(df => df.StartsWith("custom_field_", StringComparison.OrdinalIgnoreCase))
-            .Select(df => int.Parse(df.Replace("custom_field_", ""))));
-        
-        var customFields = await GetLookup("custom_fields");
-        return values.Select(v => customFields[v]).ToList();
-    }
-
     public async Task<List<PaperlessDocument>> GetDocumentsFromView(int viewId, CancellationToken cancellationToken)
     {
-        var view = await _httpClient.GetFromJsonAsync<SavedViewDto?>($"saved_views/{viewId}/", cancellationToken);
-        if (view == null)
-        {
-            throw new InvalidOperationException($"View with id {viewId} not found");
-        }
-        
+        var view = await GetView(viewId, cancellationToken);
+
         var baseUrl = $"documents/";
 
-        var filterRulesGroup = view.FilterRules.GroupBy(fr => fr.Type);
+        var filterRulesGroup = view!.FilterRules.GroupBy(fr => fr.Type);
         foreach (var filterRuleGroup in filterRulesGroup)
         {
             switch (filterRuleGroup.Key)
@@ -193,6 +192,26 @@ public class PaperlessClient : IPaperlessClient
         return await FilterDocuments(cancellationToken, baseUrl);
     }
 
+    private async Task<SavedViewDto?> GetView(int viewId, CancellationToken cancellationToken)
+    {
+        var view = await _httpClient.GetFromJsonAsync<SavedViewDto?>($"saved_views/{viewId}/", cancellationToken);
+        if (view == null)
+        {
+            throw new InvalidOperationException($"View with id {viewId} not found");
+        }
+
+        return view;
+    }
+
+    public async Task<SavedView> GetSavedView(int viewId, CancellationToken cancellationToken)
+    {
+        var viewDto = await GetView(viewId, cancellationToken);
+        var filterRules = viewDto!.FilterRules.Select(ruleDto => new FilterRule(ruleDto.Type, ruleDto.Value)).ToList();
+        var customFieldNamesMapping = await GetCustomFieldNamesForSavedView(viewDto, cancellationToken);
+        
+        return new SavedView(viewDto.Id, viewDto.Name, viewDto.DisplayFields, filterRules, customFieldNamesMapping);
+    }
+
     private static string QueryPrefix(string baseUrl)
     {
         if (baseUrl.Contains('?'))
@@ -207,14 +226,14 @@ public class PaperlessClient : IPaperlessClient
         return baseUrl;
     }
 
-    private async Task<Dictionary<int, string>> GetLookup(string endpoint)
+    private async Task<Dictionary<int, string>> GetLookup(string endpoint, CancellationToken cancellationToken = default)
     {
         var results = new List<LookupEntryDto>();
         var nextUrl = $"{endpoint}/";
 
         while (!string.IsNullOrEmpty(nextUrl))
         {
-            var response = await _httpClient.GetFromJsonAsync<LookupResponseDto>(nextUrl);
+            var response = await _httpClient.GetFromJsonAsync<LookupResponseDto>(nextUrl, cancellationToken: cancellationToken);
             if (response?.Results != null)
             {
                 results.AddRange(response.Results);

@@ -8,6 +8,6 @@ public interface IPaperlessClient
         List<string> excludeTags, List<string> includeDocumentTypes, List<string> includeCustomFields,
         CancellationToken cancellationToken);
 
-    Task<List<string>> GetCustomFieldsFromView(int viewId, CancellationToken cancellationToken);
     Task<List<PaperlessDocument>> GetDocumentsFromView(int viewId, CancellationToken cancellationToken);
+    Task<SavedView> GetSavedView(int viewId, CancellationToken cancellationToken);
 }

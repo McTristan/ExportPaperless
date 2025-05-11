@@ -12,6 +12,7 @@ public class PaperlessDocument(
     string[]? tags,
     string[]? notes,
     Dictionary<string, JsonElement?> customFields,
+    int pageCount,
     Uri url)
 {
     public int Id { get; } = id;
@@ -23,6 +24,6 @@ public class PaperlessDocument(
     public string? DocumentType { get; } = documentType;
     public List<string>? Notes { get; } = notes?.ToList();
     public Dictionary<string, JsonElement?>? CustomFields { get; } = customFields;
-
+    public int PageCount { get; } = pageCount;
     public Uri Url { get; } = url;
 }
