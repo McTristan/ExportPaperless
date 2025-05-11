@@ -26,14 +26,14 @@ Authentification with the Paperless NGX Api can be done either on the server sid
 
 The following additional environment variables need to be setup:
 
-PAPERLESS__API_URL <- the URL to the paperless api, i.e. http://localhost:8855/api/ - can be internal or external (i.e. reverse proxied)
-PAPERLESS__PUBLIC_URL <- the URL of the paperless website, i.e. https://paperless.my.domain
+**PAPERLESS__API_URL** <- the URL to the paperless api, i.e. http://localhost:8855/api/ - can be internal or external (i.e. reverse proxied)
+**PAPERLESS__PUBLIC_URL** <- the URL of the paperless website, i.e. https://paperless.my.domain
 
 The following additional environment variables are optional but useful:
 
-EXCEL__DATE_FORMAT <- how to export date formats to excel, can be a valid date (time) mask like yyyy-MM-dd, dd.MM.yyyy
-EXCEL__STRIP_CURRENCY <- currency values are stored as strings inside paperless, to get meaningful numbers out of it we need to strip the currency string i.e. EUR or USD from the string and try to parse the value as a double (only EUR and USD supported at the moment)
-EXCEL__NUMBER_FORMAT <- how to format numbers in Excel, can be a valid number mask like 0.00 (2 decimal places)
+**EXCEL__DATE_FORMAT** <- how to export date formats to excel, can be a valid date (time) mask like yyyy-MM-dd, dd.MM.yyyy
+**EXCEL__STRIP_CURRENCY** <- currency values are stored as strings inside paperless, to get meaningful numbers out of it we need to strip the currency string i.e. EUR or USD from the string and try to parse the value as a double (only EUR and USD supported at the moment)
+**EXCEL__NUMBER_FORMAT** <- how to format numbers in Excel, can be a valid number mask like 0.00 (2 decimal places)
 
 There are pre-built Docker-Images for amd64 and arm64:
 
