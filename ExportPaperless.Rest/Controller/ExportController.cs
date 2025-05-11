@@ -12,13 +12,19 @@ public class ExportController(IPaperlessClient client, IExcelExportService excel
     : ControllerBase
 {
     [HttpGet("")]
-    public async Task<IActionResult> Export([FromQuery] DateTime from, [FromQuery] DateTime to,
-        [FromQuery] List<string> includeTags, [FromQuery] List<string> excludeTags,
+    public async Task<IActionResult> Export(
+        [FromQuery] DateTime from,
+        [FromQuery] DateTime to,
+        [FromQuery] List<string> includeTags,
+        [FromQuery] List<string> excludeTags,
         [FromQuery] List<string> includeDocumentTypes,
-        [FromQuery] List<string> fields, CancellationToken cancellationToken)
+        [FromQuery] List<string> includeCustomFields, 
+        [FromQuery] List<string> includeCorrespondents,
+        CancellationToken cancellationToken)
     {
-        var documents = await client.GetDocuments(from, to, includeTags, excludeTags, includeDocumentTypes, fields, cancellationToken);
-        var excelStream = excelService.GenerateExcel(documents, fields);
+        var documents = await client.GetDocuments(from, to, includeTags, excludeTags, 
+            includeDocumentTypes, includeCustomFields, includeCorrespondents, cancellationToken);
+        var excelStream = excelService.GenerateExcel(documents, includeCustomFields);
         var zipBytes = await zipService.CreateZipWithDocuments(documents, excelStream, cancellationToken);
 
         return File(zipBytes, "application/zip", "export.zip");

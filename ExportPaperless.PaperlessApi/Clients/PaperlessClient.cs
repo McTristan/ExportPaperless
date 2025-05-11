@@ -29,7 +29,8 @@ public class PaperlessClient : IPaperlessClient
     }
 
     public async Task<List<PaperlessDocument>> GetDocuments(DateTime from, DateTime to, List<string> includeTags, 
-        List<string> excludeTags, List<string> includeDocumentTypes, List<string> includeCustomFields, CancellationToken cancellationToken)
+        List<string> excludeTags, List<string> includeDocumentTypes, List<string> includeCustomFields, List<string> includeCorrespondents, 
+        CancellationToken cancellationToken)
     {
         var baseUrl = $"documents/?created__gte={from:yyyy-MM-dd}&created__lte={to:yyyy-MM-dd}";
         var includeTagIds = await GetIdsFromNames(includeTags, "tags");
@@ -58,7 +59,13 @@ public class PaperlessClient : IPaperlessClient
             baseUrl += $"&custom_fields__id__all={includeCustomFieldQuery}";
         }
 
-        var fullDocs = await FilterDocuments(cancellationToken, baseUrl);
+        var includeCorrespondentIds = await GetIdsFromNames(includeCorrespondents, "correspondents");
+        var includeCorrespondentQuery = string.Join(",", includeCorrespondentIds.Select(id => id.ToString()));
+        if (!string.IsNullOrEmpty(includeCorrespondentQuery))
+        {
+            baseUrl += $"&correspondent__id__in={includeCorrespondentQuery}";
+        }
+        var fullDocs = await FilterDocuments(baseUrl, cancellationToken);
         return fullDocs.OrderBy(f => f.Created).ToList();
     }
 
@@ -82,16 +89,16 @@ public class PaperlessClient : IPaperlessClient
         return fieldIdToNames;
     }
 
-    private async Task<List<PaperlessDocument>> FilterDocuments(CancellationToken cancellationToken, string baseUrl)
+    private async Task<List<PaperlessDocument>> FilterDocuments(string filterUrl, CancellationToken cancellationToken)
     {
         var fullDocs = new List<PaperlessDocument>();
-        var nextUrl = baseUrl;
+        var nextUrl = filterUrl;
 
         // Lookup tables
-        var correspondents = await GetLookup("correspondents");
-        var docTypes = await GetLookup("document_types");
-        var tags = await GetLookup("tags");
-        var customFields = await GetLookup("custom_fields");
+        var correspondents = await GetLookup("correspondents", cancellationToken);
+        var docTypes = await GetLookup("document_types", cancellationToken);
+        var tags = await GetLookup("tags", cancellationToken);
+        var customFields = await GetLookup("custom_fields", cancellationToken);
         
         while (!string.IsNullOrEmpty(nextUrl))
         {
@@ -189,7 +196,7 @@ public class PaperlessClient : IPaperlessClient
             baseUrl += $"ordering={sortDirection}{view.Sort}";
         }
         
-        return await FilterDocuments(cancellationToken, baseUrl);
+        return await FilterDocuments(baseUrl, cancellationToken);
     }
 
     private async Task<SavedViewDto?> GetView(int viewId, CancellationToken cancellationToken)
@@ -211,7 +218,7 @@ public class PaperlessClient : IPaperlessClient
         
         return new SavedView(viewDto.Id, viewDto.Name, viewDto.DisplayFields, filterRules, customFieldNamesMapping);
     }
-
+    
     private static string QueryPrefix(string baseUrl)
     {
         if (baseUrl.Contains('?'))
