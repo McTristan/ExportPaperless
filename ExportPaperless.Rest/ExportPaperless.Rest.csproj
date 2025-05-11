@@ -11,15 +11,10 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Reference Include="Microsoft.AspNetCore.Authorization">
-        <HintPath>..\..\..\..\.dotnet\packs\Microsoft.AspNetCore.App.Ref\8.0.13\ref\net8.0\Microsoft.AspNetCore.Authorization.dll</HintPath>
-      </Reference>
-      <Reference Include="Microsoft.AspNetCore.Mvc.Abstractions">
-        <HintPath>..\..\..\..\.dotnet\packs\Microsoft.AspNetCore.App.Ref\8.0.13\ref\net8.0\Microsoft.AspNetCore.Mvc.Abstractions.dll</HintPath>
-      </Reference>
-      <Reference Include="Microsoft.AspNetCore.Mvc.Core">
-        <HintPath>..\..\..\..\.dotnet\packs\Microsoft.AspNetCore.App.Ref\8.0.13\ref\net8.0\Microsoft.AspNetCore.Mvc.Core.dll</HintPath>
-      </Reference>
+      <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="8.0.15" />
+      <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.3.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.3.0" />
     </ItemGroup>
+    
 
 </Project>
