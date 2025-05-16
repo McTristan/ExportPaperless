@@ -1,6 +1,7 @@
 using ExportPaperless.Domain.Services;
+using Microsoft.Extensions.Configuration;
 
-namespace ExportPaperless.Services;
+namespace ExportPaperless.Excel.Services;
 
 public class ExcelExportConfigurationService(IConfiguration configuration) : IExcelExportConfigurationService
 {

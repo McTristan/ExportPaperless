@@ -1,4 +1,6 @@
-namespace ExportPaperless;
+using Microsoft.Extensions.Configuration;
+
+namespace ExportPaperless.Services;
 
 public static class Configuration
 {

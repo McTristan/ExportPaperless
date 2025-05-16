@@ -21,7 +21,7 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<AuthenticationS
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         var configuredKey = _configurationService.Token;
-        if (string.IsNullOrEmpty(configuredKey) && Request.Headers.TryGetValue("x-api-Key", out var apiKeyHeader))
+        if (string.IsNullOrEmpty(configuredKey) && Request.Headers.TryGetValue("x-api-Key", out _))
         {
             return Task.FromResult(AuthenticateResult.Fail("Missing API Key, use x-api-Key header (on client side) or PAPERLESS__API_TOKEN environment variable (on server side)"));
         }

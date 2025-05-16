@@ -1,8 +1,11 @@
 using ExportPaperless.Domain.Services;
+using ExportPaperless.Excel;
 using ExportPaperless.PaperlessApi;
-using ExportPaperless.Services;
+using ExportPaperless.Services.Services;
+using ExportPaperless.Storage;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace ExportPaperless;
+namespace ExportPaperless.Services;
 
 public static class Registry
 {
@@ -11,9 +14,8 @@ public static class Registry
         var configuration = Configuration.GetStandardConfiguration();
         services.AddSingleton(configuration);
         services.AddPaperlessApi(configuration);
-        services.AddTransient<IExcelExportService, ExcelExportService>();
-        services.AddTransient<IExcelExportConfigurationService, ExcelExportConfigurationService>();
-
-        services.AddControllers();
+        services.AddStorage();
+        services.AddExcel();
+        services.AddTransient<IExportPaperlessService, ExportPaperlessService>();
     }
 }

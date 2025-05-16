@@ -6,7 +6,7 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using ExportPaperless.Domain.Entities;
 using ExportPaperless.Domain.Services;
 
-namespace ExportPaperless.Services;
+namespace ExportPaperless.Excel.Services;
 
 public class ExcelExportService(IExcelExportConfigurationService configurationService) : IExcelExportService
 {

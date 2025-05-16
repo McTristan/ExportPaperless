@@ -1,4 +1,3 @@
-using System.Net.Http.Headers;
 using ExportPaperless.Domain.Clients;
 using ExportPaperless.Domain.Services;
 using ExportPaperless.PaperlessApi.Clients;
@@ -21,6 +20,7 @@ public static class ServiceCollectionExtensions
         });
         
         services.AddTransient<IPaperlessClient, PaperlessClient>();
-        services.AddTransient<IZipService, ZipService>();
+        services.AddScoped<ITokenProvider, TokenProvider>();
+        services.AddScoped<IPaperlessClientFactory, PaperlessClientFactory>();
     }
 }

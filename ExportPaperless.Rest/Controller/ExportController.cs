@@ -8,8 +8,8 @@ namespace ExportPaperless.Rest.Controller;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(AuthenticationSchemes = "ApiKeyScheme")]
-public class ExportController(IPaperlessClient client, IExcelExportService excelService, IZipService zipService)
-    : ControllerBase
+public class ExportController(IExportPaperlessService exportPaperlessService, ITokenProvider tokenProvider)
+    : BaseController(tokenProvider)
 {
     [HttpGet("")]
     public async Task<IActionResult> Export(
@@ -22,22 +22,10 @@ public class ExportController(IPaperlessClient client, IExcelExportService excel
         [FromQuery] List<string> includeCorrespondents,
         CancellationToken cancellationToken)
     {
-        var documents = await client.GetDocuments(from, to, includeTags, excludeTags, 
-            includeDocumentTypes, includeCustomFields, includeCorrespondents, cancellationToken);
-        var excelStream = excelService.GenerateExcel(documents, includeCustomFields);
-        var zipBytes = await zipService.CreateZipWithDocuments(documents, excelStream, cancellationToken);
+        SetClientToken();
 
-        return File(zipBytes, "application/zip", "export.zip");
-    }
-
-    [HttpGet("view/{id}")]
-    public async Task<IActionResult> ExportView([FromRoute] int id, CancellationToken cancellationToken)
-    {
-        var documents = await client.GetDocumentsFromView(id, cancellationToken);
-        var savedView = await client.GetSavedView(id, cancellationToken);
-        var excelStream = excelService.GenerateExcel(documents, savedView);
-        var zipBytes = await zipService.CreateZipWithDocuments(documents, excelStream, cancellationToken);
-
+        var zipBytes = await exportPaperlessService.ExportByQuery(from, to, includeTags, excludeTags,
+           includeDocumentTypes, includeCustomFields, includeCorrespondents, cancellationToken);
         return File(zipBytes, "application/zip", "export.zip");
     }
 }

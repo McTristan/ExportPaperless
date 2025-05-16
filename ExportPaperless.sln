@@ -8,6 +8,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExportPaperless.PaperlessAp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExportPaperless.Rest", "ExportPaperless.Rest\ExportPaperless.Rest.csproj", "{E371A881-E210-40C1-8260-EADA988E6CB4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExportPaperless.McpServer", "ExportPaperless.McpServer\ExportPaperless.McpServer.csproj", "{F734D3AD-F73F-4A8D-B14B-CC8618270363}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExportPaperless.Excel", "ExportPaperless.Excel\ExportPaperless.Excel.csproj", "{57EF0FC3-52FC-456B-B3DA-EB56F3156A97}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExportPaperless.Services", "ExportPaperless.Services\ExportPaperless.Services.csproj", "{2AC33A57-09E6-4932-A072-749030417C94}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExportPaperless.Storage", "ExportPaperless.Storage\ExportPaperless.Storage.csproj", "{4AA15CA6-B715-4B39-9827-1528E700F49A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +38,21 @@ Global
 		{E371A881-E210-40C1-8260-EADA988E6CB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E371A881-E210-40C1-8260-EADA988E6CB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E371A881-E210-40C1-8260-EADA988E6CB4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F734D3AD-F73F-4A8D-B14B-CC8618270363}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F734D3AD-F73F-4A8D-B14B-CC8618270363}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F734D3AD-F73F-4A8D-B14B-CC8618270363}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F734D3AD-F73F-4A8D-B14B-CC8618270363}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57EF0FC3-52FC-456B-B3DA-EB56F3156A97}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57EF0FC3-52FC-456B-B3DA-EB56F3156A97}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57EF0FC3-52FC-456B-B3DA-EB56F3156A97}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57EF0FC3-52FC-456B-B3DA-EB56F3156A97}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2AC33A57-09E6-4932-A072-749030417C94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AC33A57-09E6-4932-A072-749030417C94}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AC33A57-09E6-4932-A072-749030417C94}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AC33A57-09E6-4932-A072-749030417C94}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4AA15CA6-B715-4B39-9827-1528E700F49A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4AA15CA6-B715-4B39-9827-1528E700F49A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4AA15CA6-B715-4B39-9827-1528E700F49A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4AA15CA6-B715-4B39-9827-1528E700F49A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

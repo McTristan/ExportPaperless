@@ -10,4 +10,6 @@ public interface IPaperlessClient
 
     Task<List<PaperlessDocument>> GetDocumentsFromView(int viewId, CancellationToken cancellationToken);
     Task<SavedView> GetSavedView(int viewId, CancellationToken cancellationToken);
+    Task<List<SavedView>> GetSavedViews(CancellationToken cancellationToken);
+    Task<byte[]> CreateZipWithDocuments(List<PaperlessDocument> docs, Stream excelStream, CancellationToken cancellationToken);
 }

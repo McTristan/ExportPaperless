@@ -1,4 +1,4 @@
-using ExportPaperless;
+using ExportPaperless.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.OpenApi.Models;
 
@@ -9,8 +9,6 @@ builder.Services.AddControllers();
 builder.Services
     .AddAuthentication("ApiKeyScheme")
     .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>("ApiKeyScheme", null);
-
-builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddServices();
 

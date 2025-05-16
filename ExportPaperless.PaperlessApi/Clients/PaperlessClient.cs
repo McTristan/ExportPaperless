@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+using System.IO.Compression;
 using System.Net.Http.Json;
 using System.Text.Json;
 using ExportPaperless.Domain;
@@ -6,28 +6,12 @@ using ExportPaperless.Domain.Clients;
 using ExportPaperless.Domain.Entities;
 using ExportPaperless.Domain.Services;
 using ExportPaperless.PaperlessApi.DataContracts;
-using Microsoft.AspNetCore.Http;
 
 namespace ExportPaperless.PaperlessApi.Clients;
 
-public class PaperlessClient : IPaperlessClient
+public class PaperlessClient(HttpClient httpClient, IPaperlessConfigurationService configurationService)
+    : IPaperlessClient
 {
-    private readonly HttpClient _httpClient;
-    private readonly IPaperlessConfigurationService _configurationService;
-
-    public PaperlessClient(IHttpContextAccessor contextAccessor, IHttpClientFactory httpClientFactory, IPaperlessConfigurationService configurationService)
-    {
-        _configurationService = configurationService;
-        _httpClient = httpClientFactory.CreateClient("Paperless");
-        var token = contextAccessor.HttpContext?.Request.Headers["x-api-key"];
-        if (string.IsNullOrEmpty(token))
-        {
-            token = configurationService.Token;
-        }
-        
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Token", token);
-    }
-
     public async Task<List<PaperlessDocument>> GetDocuments(DateTime from, DateTime to, List<string> includeTags, 
         List<string> excludeTags, List<string> includeDocumentTypes, List<string> includeCustomFields, List<string> includeCorrespondents, 
         CancellationToken cancellationToken)
@@ -102,7 +86,7 @@ public class PaperlessClient : IPaperlessClient
         
         while (!string.IsNullOrEmpty(nextUrl))
         {
-            var listResponse = await _httpClient.GetFromJsonAsync<PaperlessDocumentListResponseDto>(nextUrl, cancellationToken: cancellationToken);
+            var listResponse = await httpClient.GetFromJsonAsync<PaperlessDocumentListResponseDto>(nextUrl, cancellationToken: cancellationToken);
             if (listResponse?.Results == null) break;
 
             foreach (var doc in listResponse.Results)
@@ -120,7 +104,7 @@ public class PaperlessClient : IPaperlessClient
                     }
                 }
 
-                var url = new Uri(_configurationService.PublicAddress, $"documents/{doc.Id}/details");
+                var url = new Uri(configurationService.PublicAddress, $"documents/{doc.Id}/details");
                 var paperlessDocument = new PaperlessDocument(doc.Id, doc.Title,
                     string.IsNullOrEmpty(doc.FileName) ? doc.OriginalFileName : doc.FileName, doc.Created,
                     correspondent, documentType, namedTags?.ToArray(), doc.Notes?.Select(n => n.Note).ToArray(),
@@ -201,7 +185,7 @@ public class PaperlessClient : IPaperlessClient
 
     private async Task<SavedViewDto?> GetView(int viewId, CancellationToken cancellationToken)
     {
-        var view = await _httpClient.GetFromJsonAsync<SavedViewDto?>($"saved_views/{viewId}/", cancellationToken);
+        var view = await httpClient.GetFromJsonAsync<SavedViewDto?>($"saved_views/{viewId}/", cancellationToken);
         if (view == null)
         {
             throw new InvalidOperationException($"View with id {viewId} not found");
@@ -217,6 +201,53 @@ public class PaperlessClient : IPaperlessClient
         var customFieldNamesMapping = await GetCustomFieldNamesForSavedView(viewDto, cancellationToken);
         
         return new SavedView(viewDto.Id, viewDto.Name, viewDto.DisplayFields, filterRules, customFieldNamesMapping);
+    }
+
+    public async Task<List<SavedView>> GetSavedViews(CancellationToken cancellationToken)
+    {
+        var savedViewResponseDto = await httpClient.GetFromJsonAsync<SavedViewResponseDto>($"saved_views/?page_size=2000", cancellationToken);
+
+        if (savedViewResponseDto == null)
+        {
+            return [];
+        }
+        
+        var savedViews = new List<SavedView>();
+        foreach (var savedViewDto in savedViewResponseDto.Results.OrderBy(s => s.Name))
+        {
+            var filterRules = savedViewDto!.FilterRules.Select(ruleDto => new FilterRule(ruleDto.Type, ruleDto.Value)).ToList();
+            var customFieldNamesMapping = await GetCustomFieldNamesForSavedView(savedViewDto, cancellationToken);
+
+            savedViews.Add(new SavedView(savedViewDto.Id, savedViewDto.Name, savedViewDto.DisplayFields, filterRules, customFieldNamesMapping));
+        }
+        return savedViews.OrderBy(s => s.Name).ToList();;
+    }
+
+    public async Task<byte[]> CreateZipWithDocuments(List<PaperlessDocument> docs, Stream excelStream, CancellationToken cancellationToken)
+    {
+        using var ms = new MemoryStream();
+        using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, true))
+        {
+            var excelEntry = archive.CreateEntry("metadata.xlsx");
+            await using (var entryStream = excelEntry.Open())
+            {
+                await excelStream.CopyToAsync(entryStream, cancellationToken);
+            }
+
+            foreach (var doc in docs)
+            {
+                var response = await httpClient.GetAsync($"documents/{doc.Id}/download/", cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                {
+                    continue;
+                }
+                var fileEntry = archive.CreateEntry(doc.FileName);
+                await using var docStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+                await using var entryStream = fileEntry.Open();
+                await docStream.CopyToAsync(entryStream, cancellationToken);
+            }
+        }
+        return ms.ToArray();
     }
     
     private static string QueryPrefix(string baseUrl)
@@ -240,7 +271,7 @@ public class PaperlessClient : IPaperlessClient
 
         while (!string.IsNullOrEmpty(nextUrl))
         {
-            var response = await _httpClient.GetFromJsonAsync<LookupResponseDto>(nextUrl, cancellationToken: cancellationToken);
+            var response = await httpClient.GetFromJsonAsync<LookupResponseDto>(nextUrl, cancellationToken: cancellationToken);
             if (response?.Results != null)
             {
                 results.AddRange(response.Results);

@@ -8,6 +8,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\ExportPaperless.Domain\ExportPaperless.Domain.csproj" />
+      <ProjectReference Include="..\ExportPaperless.PaperlessApi\ExportPaperless.PaperlessApi.csproj" />
+      <ProjectReference Include="..\ExportPaperless.Services\ExportPaperless.Services.csproj" />
     </ItemGroup>
 
     <ItemGroup>
