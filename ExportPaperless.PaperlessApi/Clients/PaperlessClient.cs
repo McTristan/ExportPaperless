@@ -205,7 +205,7 @@ public class PaperlessClient(HttpClient httpClient, IPaperlessConfigurationServi
 
     public async Task<List<SavedView>> GetSavedViews(CancellationToken cancellationToken)
     {
-        var savedViewResponseDto = await httpClient.GetFromJsonAsync<SavedViewResponseDto>($"saved_views/?page_size=2000", cancellationToken);
+        var savedViewResponseDto = await httpClient.GetFromJsonAsync<SavedViewResponseDto>("saved_views/?page_size=2000", cancellationToken);
 
         if (savedViewResponseDto == null)
         {

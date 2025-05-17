@@ -6,37 +6,21 @@ namespace ExportPaperless.McpServer.Services;
 public class McpConfigurationService(IConfiguration configuration): IMcpConfigurationService
 {
     private readonly IConfigurationSection _section = configuration.GetSection("MCP");
-
-    public Uri DownloadUri
+   
+    public Uri ExportPaperlessApiUrl
     {
         get
         {
-            var downloadUrl = _section["DOWNLOAD_URL"];
-            if (string.IsNullOrEmpty(downloadUrl))
+            var exportPaperlessApiUrl = _section["EXPORT_PAPERLESS_API_URL"];
+            if (string.IsNullOrEmpty(exportPaperlessApiUrl))
             {
                 throw new InvalidOperationException(
-                    "DOWNLOAD_URL variable is not set (appsettings.json), you can also use an environment variable in the format: MCP__DOWNLOAD_URL=http://localhost:8000");
+                    "EXPORT_PAPERLESS_API_URL variable is not set (appsettings.json), you can also use an environment variable in the format: MCP__EXPORT_PAPERLESS_API_URL=http://localhost:8000");
             }
 
-            return new Uri(downloadUrl);
-        }
-    }
-    
-    public Uri UploadUri
-    {
-        get
-        {
-            var uploadUrl = _section["UPLOAD_URL"];
-            if (string.IsNullOrEmpty(uploadUrl))
-            {
-                throw new InvalidOperationException(
-                    "UPLOAD_URL variable is not set (appsettings.json), you can also use an environment variable in the format: MCP__UPLOAD_URL=http://localhost:8000");
-            }
-
-            return new Uri(uploadUrl);
+            return new Uri(exportPaperlessApiUrl);
         }
     }
 
-    public string? Token => _section["API_TOKEN"];
-    
+    public string? ExportPaperlessApiToken => _section["EXPORT_PAPERLESS_API_TOKEN"];
 }

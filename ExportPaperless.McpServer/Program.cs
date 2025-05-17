@@ -20,14 +20,27 @@ try
 
     var builder = Host.CreateApplicationBuilder(args);
     builder.Services.AddSerilog();
-    builder.Services.AddServices();
-    builder.Services.AddTransient<IMcpConfigurationService, McpConfigurationService>();
+    var configuration = Configuration.GetStandardConfiguration();
+    builder.Services.AddSingleton(configuration);
+    var mcpConfigurationService = new McpConfigurationService(configuration);
+    builder.Services.AddTransient<IMcpConfigurationService, McpConfigurationService>(b => mcpConfigurationService);
+    builder.Services.AddSingleton(_ =>
+    {
+        var httpClient = new HttpClient { BaseAddress = mcpConfigurationService.ExportPaperlessApiUrl };
+        if (!string.IsNullOrEmpty(mcpConfigurationService.ExportPaperlessApiToken))
+        {
+            httpClient.DefaultRequestHeaders.Add("x-api-key", mcpConfigurationService.ExportPaperlessApiToken);
+        }
+
+        return httpClient;
+    });
+    
     builder.Services.AddMcpServer()
         .WithStdioServerTransport()
         .WithToolsFromAssembly();
 
     var app = builder.Build();
-
+    
     await app.RunAsync();
     return 0;
 }

@@ -1,6 +1,6 @@
 using System.ComponentModel;
-using System.Net.Http.Headers;
-using ExportPaperless.Domain.Services;
+using System.Text.Json;
+using ExportPaperless.PaperlessApi.DataContracts;
 using Microsoft.Extensions.AI;
 using ModelContextProtocol.Server;
 using Serilog;
@@ -8,53 +8,73 @@ using Serilog;
 namespace ExportPaperless.McpServer.Tools;
 
 [McpServerToolType]
-public class ExportFromPaperlessTools(IMcpConfigurationService mcpConfigurationService)
+public class ExportFromPaperlessTools
 {
-    [McpServerTool(Name = "exportSavedViewAsZip"), Description("Exports a saved view from paperless into a .zip file with an excel metadata file and pdf documents")]
+    [McpServerTool(Name = "listSavedViews"), Description("Lists all saved views from paperless with name and id")]
+    public async Task<IEnumerable<AIContent>> ListSavedViews(
+        HttpClient httpClient,
+        CancellationToken cancellationToken)
+    {
+        var response = await httpClient.GetAsync("/api/savedview", cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return
+            [
+                new TextContent("Fehler beim Abrufen der gespeicherten Ansichten."),
+                new TextContent($"Statuscode: {response.StatusCode}"),
+                new TextContent($"Fehlermeldung: {await response.Content.ReadAsStringAsync(cancellationToken)}"),
+                new TextContent($"Base Url: {httpClient.BaseAddress}, Request Url: {response.RequestMessage?.RequestUri}")
+            ];
+        }
+        
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+        var savedViewDtos = JsonSerializer.Deserialize<List<SavedViewDto>>(responseContent);
+        
+        if (savedViewDtos == null)
+        {
+            return new List<AIContent>();
+        }
+        
+        return savedViewDtos.Select(savedViewDto => new TextContent($"{savedViewDto.Id} - {savedViewDto.Name}"))
+            .Cast<AIContent>().ToList();
+    }
+
+    [McpServerTool(Name = "exportSavedViewAsZip"),
+     Description("Exports a saved view from paperless into a .zip file with an excel metadata file and pdf documents")]
     public async Task<IEnumerable<AIContent>> ExportSavedViewAsZip(
-        IExportPaperlessService exportPaperlessService,
-        [Description("The saved view Id to export to a zip file")] int viewId,
+        HttpClient httpClient,
+        [Description("The saved view Id to export to a zip file")]
+        int viewId,
         CancellationToken cancellationToken)
     {
         try
         {
-            var zipBytes = await exportPaperlessService.ExportSavedView(viewId, cancellationToken);
-            
-            // Einen eindeutigen Dateinamen erzeugen
-            var fileName = $"SavedView_{viewId}_{DateTime.UtcNow:yyyyMMddHHmmss}.zip";
-        
-            // Datei per Multipart Form Upload an die angegebene URL hochladen
-            using var httpClient = new HttpClient();
-            using var multipartContent = new MultipartFormDataContent();
+            var response = await httpClient.PostAsync($"/api/SavedView/store/{viewId}", null, cancellationToken);
 
-            if (!string.IsNullOrEmpty(mcpConfigurationService.Token))
+            if (!response.IsSuccessStatusCode)
             {
-                // API-Key als Header hinzufügen
-                httpClient.DefaultRequestHeaders.Add("x-api-key", mcpConfigurationService.Token);
-            }
-
-            // Dateiinhalt hinzufügen
-            using var fileContent = new ByteArrayContent(zipBytes);
-            fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
-        
-            // Den Dateinamen als Teil des Multipart-Formulars angeben
-            multipartContent.Add( fileContent, "data", fileName);
-        
-            var downloadUri = new Uri(mcpConfigurationService.DownloadUri, fileName);
-            // Upload durchführen
-            var response = await httpClient.PostAsync(mcpConfigurationService.UploadUri, multipartContent, cancellationToken);
-
-            if (response.IsSuccessStatusCode)
-            {
-                return 
+                return
                 [
-                    new TextContent("Die ZIP-Datei wurde erfolgreich erstellt und hochgeladen."),
-                    new TextContent("Hier ist die Download-Url:"),
-                    new UriContent(downloadUri, "application/zip"),
+                    new TextContent($"Fehler beim Abrufen der gespeicherten Ansicht {viewId}."),
+                    new TextContent($"Statuscode: {response.StatusCode}"),
+                    new TextContent($"Fehlermeldung: {await response.Content.ReadAsStringAsync(cancellationToken)}")
                 ];
             }
 
-            return 
+            // Location-URL aus dem Header extrahieren
+            var locationUrl = response.Headers.Location?.ToString();
+
+            if (!string.IsNullOrEmpty(locationUrl))
+            {
+                return
+                [
+                    new TextContent("Die ZIP-Datei wurde erfolgreich erstellt und hochgeladen."),
+                    new TextContent("Hier ist die Download-Url:"),
+                    new UriContent(locationUrl, "application/zip"),
+                ];
+            }
+
+            return
             [
                 new TextContent("Die ZIP-Datei wurde erstellt, aber der Upload ist fehlgeschlagen."),
                 new TextContent($"Statuscode: {response.StatusCode}"),
@@ -67,8 +87,4 @@ public class ExportFromPaperlessTools(IMcpConfigurationService mcpConfigurationS
             throw;
         }
     }
-    
-    [McpServerTool(Name = "echo"), Description("Echoes the message back to the client.")]
-    public static string Echo(string message) => $"Echo: {message}";
 }
-

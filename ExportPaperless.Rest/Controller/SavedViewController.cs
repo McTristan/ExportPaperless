@@ -13,7 +13,7 @@ public class SavedViewController(
     IExportPaperlessService exportPaperlessService,
     ITokenProvider tokenProvider,
     IStorageService storageService,
-    IPaperlessClient paperlessClient)
+    IPaperlessClientFactory paperlessClientFactory)
     : BaseController(tokenProvider)
 {
     [HttpGet("export/{id}")]
@@ -48,7 +48,10 @@ public class SavedViewController(
     [HttpGet("")]
     public async Task<ActionResult<List<SavedViewDto>>> GetSavedViews(CancellationToken cancellationToken)
     {
-        var views = await paperlessClient.GetSavedViews(cancellationToken);
+        SetClientToken();
+        
+        var client = paperlessClientFactory.CreateClient();
+        var views = await client.GetSavedViews(cancellationToken);
 
         return views.Select(v => new SavedViewDto { Id = v.Id, Name = v.Name }).ToList();
 

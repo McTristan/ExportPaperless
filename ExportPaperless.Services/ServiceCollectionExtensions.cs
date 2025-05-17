@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ExportPaperless.Services;
 
-public static class Registry
+public static class ServiceCollectionExtensions
 {
     public static void AddServices(this IServiceCollection services)
     {
