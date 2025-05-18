@@ -22,4 +22,18 @@ public class StorageConfigurationService(IConfiguration configuration): IStorage
             return storagePath;
         }
     }
+
+    public TimeSpan MaxRetentionTime
+    {
+        get
+        {
+            var maxRetentionTimeInDays = _section["MAX_RETENTION_TIME_IN_DAYS"];
+            if (string.IsNullOrEmpty(maxRetentionTimeInDays))
+            {
+                maxRetentionTimeInDays = "3";
+            }
+            
+            return TimeSpan.FromDays(int.Parse(maxRetentionTimeInDays));
+        }
+    } 
 }

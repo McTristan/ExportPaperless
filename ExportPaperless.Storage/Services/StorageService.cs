@@ -7,11 +7,11 @@ public class StorageService(IStorageConfigurationService configurationService): 
 {
     public async Task<string> StoreFile(string fileName, byte[] file, CancellationToken cancellationToken)
     {
-        // Hash des Dateiinhalts
+        // Hash of file content
         var contentHashBytes = SHA256.HashData(file);
         var contentHash = BitConverter.ToString(contentHashBytes).Replace("-", "").ToLowerInvariant();
 
-        // Hash des Dateinamens
+        // Hash of filename
         var fileNameBytes = System.Text.Encoding.UTF8.GetBytes(fileName);
         var fileNameHashBytes = SHA256.HashData(fileNameBytes);
         var fileNameHash = BitConverter.ToString(fileNameHashBytes).Replace("-", "").ToLowerInvariant();
@@ -23,7 +23,7 @@ public class StorageService(IStorageConfigurationService configurationService): 
         return fingerprint;
     }
 
-    public async Task<(byte[] Content, string FileName)> GetFile(string fingerprint, bool deleteAfterDownload, CancellationToken cancellationToken)
+    public async Task<(byte[] Content, string FileName, string ContentType)> GetFile(string fingerprint, bool deleteAfterDownload, CancellationToken cancellationToken)
     {
         var files = Directory.EnumerateFiles(configurationService.StoragePath, $"{fingerprint}_*").ToList();
         var file = files.FirstOrDefault();
@@ -36,13 +36,41 @@ public class StorageService(IStorageConfigurationService configurationService): 
         {
             var fileName = Path.GetFileName(file).Replace($"{fingerprint}_", "");
             var content = await File.ReadAllBytesAsync(file, cancellationToken);
-            return (content, fileName);
+            return (content, fileName, MimeTypeMap.GetMimeType(fileName));
         }
         finally
         {
             if (deleteAfterDownload)
             {
                 File.Delete(file);
+            }
+        }
+    }
+
+    public void CleanUpFiles()
+    {
+        var now = DateTime.Now;
+
+        var folderPath = configurationService.StoragePath;
+        if (!Directory.Exists(folderPath))
+            return;
+
+        var files = Directory.GetFiles(folderPath);
+
+        foreach (var file in files)
+        {
+            try
+            {
+                var creationTime = File.GetCreationTime(file);
+                if (now - creationTime > configurationService.MaxRetentionTime)
+                {
+                    File.Delete(file);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Optional: Logging oder Fehlerbehandlung
+                Console.WriteLine($"Fehler beim Löschen der Datei {file}: {ex.Message}");
             }
         }
     }

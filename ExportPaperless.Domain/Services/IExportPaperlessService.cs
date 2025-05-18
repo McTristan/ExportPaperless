@@ -13,4 +13,6 @@ public interface IExportPaperlessService
         List<string> includeCustomFields,
         List<string> includeCorrespondents,
         CancellationToken cancellationToken);
+
+    Task<byte[]> ExportSavedViewMetadata(int viewId, CancellationToken cancellationToken);
 }

@@ -1,6 +1,8 @@
+using ExportPaperless.Jobs;
 using ExportPaperless.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.OpenApi.Models;
+using Quartz;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +13,22 @@ builder.Services
     .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>("ApiKeyScheme", null);
 
 builder.Services.AddServices();
+
+builder.Services.AddQuartz(q =>
+{
+    var jobKey = new JobKey("DeleteOldFilesJob");
+
+    q.AddJob<DeleteOldFilesJob>(opts => opts.WithIdentity(jobKey));
+    q.AddTrigger(opts => opts
+        .ForJob(jobKey)
+        .WithIdentity("DeleteOldFilesTrigger")
+        .WithSimpleSchedule(x => x
+            .WithIntervalInHours(6)
+            .RepeatForever()
+        )
+    );
+});
+builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
 
 // Learn more about configuring Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();

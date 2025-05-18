@@ -31,4 +31,12 @@ public class ExportPaperlessService(IPaperlessClientFactory clientFactory, IExce
         var excelStream = excelService.GenerateExcel(documents, savedView);
         return await client.CreateZipWithDocuments(documents, excelStream, cancellationToken);
     }
+
+    public async Task<byte[]> ExportSavedViewMetadata(int viewId, CancellationToken cancellationToken)
+    {
+        var client = clientFactory.CreateClient();
+        var documents = await client.GetDocumentsFromView(viewId, cancellationToken);
+        var savedView = await client.GetSavedView(viewId, cancellationToken);
+        return excelService.GenerateExcel(documents, savedView).ToArray();
+    }
 }

@@ -20,21 +20,22 @@ public class ExportFromPaperlessTools
         {
             return
             [
-                new TextContent("Fehler beim Abrufen der gespeicherten Ansichten."),
-                new TextContent($"Statuscode: {response.StatusCode}"),
-                new TextContent($"Fehlermeldung: {await response.Content.ReadAsStringAsync(cancellationToken)}"),
-                new TextContent($"Base Url: {httpClient.BaseAddress}, Request Url: {response.RequestMessage?.RequestUri}")
+                new TextContent("Error collecting saved views from paperless. Please check the log for details."),
+                new TextContent($"Status Code: {response.StatusCode}"),
+                new TextContent($"Error: {await response.Content.ReadAsStringAsync(cancellationToken)}"),
+                new TextContent(
+                    $"Base Url: {httpClient.BaseAddress}, Request Url: {response.RequestMessage?.RequestUri}")
             ];
         }
-        
+
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
         var savedViewDtos = JsonSerializer.Deserialize<List<SavedViewDto>>(responseContent);
-        
+
         if (savedViewDtos == null)
         {
             return new List<AIContent>();
         }
-        
+
         return savedViewDtos.Select(savedViewDto => new TextContent($"{savedViewDto.Id} - {savedViewDto.Name}"))
             .Cast<AIContent>().ToList();
     }
@@ -47,17 +48,37 @@ public class ExportFromPaperlessTools
         int viewId,
         CancellationToken cancellationToken)
     {
+        return await StoreAndReturnUrl(httpClient, new Uri($"/api/SavedView/store/{viewId}", UriKind.Relative),
+            "application/zip", cancellationToken);
+    }
+
+    [McpServerTool(Name = "exportSavedViewMetadata"),
+     Description("Exports a saved view from paperless into a Microsoft Excel metadata file")]
+    // public async Task<IEnumerable<AIContent>> ExportSavedViewMetadata(
+    public async Task<IEnumerable<AIContent>> ExportSavedViewMetadata(
+        HttpClient httpClient,
+        [Description("The saved view Id to export as an Microsoft Excel file")]
+        int viewId,
+        CancellationToken cancellationToken)
+    {
+        return await StoreAndReturnUrl(httpClient, new Uri($"/api/SavedView/store/metadata/{viewId}", UriKind.Relative),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", cancellationToken);
+    }
+
+    private static async Task<IEnumerable<AIContent>> StoreAndReturnUrl(HttpClient httpClient, Uri url, string mimeType,
+        CancellationToken cancellationToken)
+    {
         try
         {
-            var response = await httpClient.PostAsync($"/api/SavedView/store/{viewId}", null, cancellationToken);
+            var response = await httpClient.PostAsync(url, null, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
                 return
                 [
-                    new TextContent($"Fehler beim Abrufen der gespeicherten Ansicht {viewId}."),
-                    new TextContent($"Statuscode: {response.StatusCode}"),
-                    new TextContent($"Fehlermeldung: {await response.Content.ReadAsStringAsync(cancellationToken)}")
+                    new TextContent($"Error processing request to {url}."),
+                    new TextContent($"Status Code: {response.StatusCode}"),
+                    new TextContent($"Error: {await response.Content.ReadAsStringAsync(cancellationToken)}")
                 ];
             }
 
@@ -68,22 +89,20 @@ public class ExportFromPaperlessTools
             {
                 return
                 [
-                    new TextContent("Die ZIP-Datei wurde erfolgreich erstellt und hochgeladen."),
-                    new TextContent("Hier ist die Download-Url:"),
-                    new UriContent(locationUrl, "application/zip"),
+                    new UriContent(locationUrl, mimeType),
                 ];
             }
 
             return
             [
-                new TextContent("Die ZIP-Datei wurde erstellt, aber der Upload ist fehlgeschlagen."),
-                new TextContent($"Statuscode: {response.StatusCode}"),
-                new TextContent($"Fehlermeldung: {await response.Content.ReadAsStringAsync(cancellationToken)}")
+                new TextContent("A file was generated but the upload failed."),
+                new TextContent($"Status Code: {response.StatusCode}"),
+                new TextContent($"Error: {await response.Content.ReadAsStringAsync(cancellationToken)}")
             ];
         }
         catch (Exception ex)
         {
-            Log.Fatal(ex, "ExportSavedViewAsZip failed abnormally");
+            Log.Fatal(ex, $"StoreAndReturnUrl {url} failed abnormally");
             throw;
         }
     }
