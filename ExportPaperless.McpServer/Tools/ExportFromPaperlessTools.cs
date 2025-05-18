@@ -72,9 +72,9 @@ public class ExportFromPaperlessTools
     public async Task<IEnumerable<AIContent>> ExportPaperlessDocumentsByQuery(
         HttpClient httpClient,
         [Description("The from date filter specifying to list all documents created after or at the given date")]
-        DateTime? from,
+        DateTime from,
         [Description("The to date filter specifying to list all documents created before or at the given date")]
-        DateTime? to,
+        DateTime to,
         [Description("The tags to filter documents by, documents include all given tags")]
         List<string> includeTags,
         [Description("The tags to exclude documents by, documents must not have these given tags")]

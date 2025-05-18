@@ -64,7 +64,7 @@ public class ExcelExportService(IExcelExportConfigurationService configurationSe
             FormatCellAsHyperlink(doc.Url.ToString(), urlCell);
             row.Append(urlCell);
 
-            if (customFields == null)
+            if (customFields != null)
             {
                 foreach (var fieldName in customFields)
                 {
