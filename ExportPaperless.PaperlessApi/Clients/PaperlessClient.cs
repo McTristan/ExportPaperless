@@ -12,45 +12,84 @@ namespace ExportPaperless.PaperlessApi.Clients;
 public class PaperlessClient(HttpClient httpClient, IPaperlessConfigurationService configurationService)
     : IPaperlessClient
 {
-    public async Task<List<PaperlessDocument>> GetDocuments(DateTime from, DateTime to, List<string> includeTags, 
-        List<string> excludeTags, List<string> includeDocumentTypes, List<string> includeCustomFields, List<string> includeCorrespondents, 
+    public async Task<List<PaperlessDocument>> GetDocuments(DateTime? from, DateTime? to, List<string>? includeTags, 
+        List<string>? excludeTags, List<string>? includeDocumentTypes, List<string>? includeCustomFields, List<string>? includeCorrespondents, 
         CancellationToken cancellationToken)
     {
-        var baseUrl = $"documents/?created__gte={from:yyyy-MM-dd}&created__lte={to:yyyy-MM-dd}";
-        var includeTagIds = await GetIdsFromNames(includeTags, "tags");
-        var includedTagsQuery = string.Join(",", includeTagIds.Select(id => id.ToString()));
-        if (!string.IsNullOrEmpty(includedTagsQuery))
-        {
-            baseUrl += $"&tags__id__all={includedTagsQuery}";
-        }
-        var excludeTagIds = await GetIdsFromNames(excludeTags, "tags");
-        var excludedTagsQuery = string.Join(",", excludeTagIds.Select(id => id.ToString()));
-        if (!string.IsNullOrEmpty(excludedTagsQuery))
-        {
-            baseUrl += $"&tags__id__none={excludedTagsQuery}";
-        }
-        var includeDocumentTypeIds = await GetIdsFromNames(includeDocumentTypes, "document_types");
-        var includedDocumentTypesQuery = string.Join(",", includeDocumentTypeIds.Select(id => id.ToString()));
-        if (!string.IsNullOrEmpty(includedDocumentTypesQuery))
-        {
-            baseUrl += $"&document_type__id__in={includedDocumentTypesQuery}";
-        }
+        var baseUrl = "documents/";
         
-        var includeCustomFieldIds = await GetIdsFromNames(includeCustomFields, "custom_fields");
-        var includeCustomFieldQuery = string.Join(",", includeCustomFieldIds.Select(id => id.ToString()));
-        if (!string.IsNullOrEmpty(includeCustomFieldQuery))
+        if (from.HasValue)
         {
-            baseUrl += $"&custom_fields__id__all={includeCustomFieldQuery}";
+            AppendQueryParameters(ref baseUrl, $"created__gte={from:yyyy-MM-dd}");
         }
 
-        var includeCorrespondentIds = await GetIdsFromNames(includeCorrespondents, "correspondents");
-        var includeCorrespondentQuery = string.Join(",", includeCorrespondentIds.Select(id => id.ToString()));
-        if (!string.IsNullOrEmpty(includeCorrespondentQuery))
+        if (to.HasValue)
         {
-            baseUrl += $"&correspondent__id__in={includeCorrespondentQuery}";
+            AppendQueryParameters(ref baseUrl, $"created__lte={to:yyyy-MM-dd}");
         }
+         
+        if (includeTags != null)
+        {
+            var includeTagIds = await GetIdsFromNames(includeTags, "tags");
+            var includedTagsQuery = string.Join(",", includeTagIds.Select(id => id.ToString()));
+            if (!string.IsNullOrEmpty(includedTagsQuery))
+            {
+                AppendQueryParameters(ref baseUrl, $"tags__id__all={includedTagsQuery}");
+            }    
+        }
+
+        if (excludeTags != null)
+        {
+            var excludeTagIds = await GetIdsFromNames(excludeTags, "tags");
+            var excludedTagsQuery = string.Join(",", excludeTagIds.Select(id => id.ToString()));
+            if (!string.IsNullOrEmpty(excludedTagsQuery))
+            {
+                AppendQueryParameters(ref baseUrl, $"tags__id__none={excludedTagsQuery}");
+            }
+        }
+
+        if (includeDocumentTypes != null)
+        {
+            var includeDocumentTypeIds = await GetIdsFromNames(includeDocumentTypes, "document_types");
+            var includedDocumentTypesQuery = string.Join(",", includeDocumentTypeIds.Select(id => id.ToString()));
+            if (!string.IsNullOrEmpty(includedDocumentTypesQuery))
+            {
+                AppendQueryParameters(ref baseUrl, $"document_type__id__in={includedDocumentTypesQuery}");
+            }
+        }
+
+        if (includeCustomFields != null)
+        {
+            var includeCustomFieldIds = await GetIdsFromNames(includeCustomFields, "custom_fields");
+            var includeCustomFieldQuery = string.Join(",", includeCustomFieldIds.Select(id => id.ToString()));
+            if (!string.IsNullOrEmpty(includeCustomFieldQuery))
+            {
+                AppendQueryParameters(ref baseUrl, $"custom_fields__id__all={includeCustomFieldQuery}");
+            }
+        }
+
+        if (includeCorrespondents != null)
+        {
+            var includeCorrespondentIds = await GetIdsFromNames(includeCorrespondents, "correspondents");
+            var includeCorrespondentQuery = string.Join(",", includeCorrespondentIds.Select(id => id.ToString()));
+            if (!string.IsNullOrEmpty(includeCorrespondentQuery))
+            {
+                AppendQueryParameters(ref baseUrl, $"correspondent__id__in={includeCorrespondentQuery}");
+            }
+        }
+
         var fullDocs = await FilterDocuments(baseUrl, cancellationToken);
         return fullDocs.OrderBy(f => f.Created).ToList();
+    }
+
+    private static void AppendQueryParameters(ref string baseUrl, string queryParameter)
+    {
+        if (!baseUrl.Contains('?'))
+        {
+            baseUrl += "?";
+        }
+        
+        baseUrl += $"{queryParameter}&";
     }
 
     private async Task<Dictionary<int, string>> GetCustomFieldNamesForSavedView(SavedViewDto viewDto, CancellationToken cancellationToken)
@@ -128,7 +167,7 @@ public class PaperlessClient(HttpClient httpClient, IPaperlessConfigurationServi
     {
         var view = await GetView(viewId, cancellationToken);
 
-        var baseUrl = $"documents/";
+        var baseUrl = "documents/";
 
         var filterRulesGroup = view!.FilterRules.GroupBy(fr => fr.Type);
         foreach (var filterRuleGroup in filterRulesGroup)
@@ -140,8 +179,7 @@ public class PaperlessClient(HttpClient httpClient, IPaperlessConfigurationServi
                         filterRuleGroup.Select(fr => int.Parse(fr.Value)).ToList().Select(id => id.ToString()));
                     if (!string.IsNullOrEmpty(includedTagsQuery))
                     {
-                        baseUrl = QueryPrefix(baseUrl);
-                        baseUrl += $"tags__id__all={includedTagsQuery}";
+                        AppendQueryParameters(ref baseUrl, $"tags__id__all={includedTagsQuery}");
                     }
                     break;
                 case RuleType.HasNotTag:
@@ -149,8 +187,7 @@ public class PaperlessClient(HttpClient httpClient, IPaperlessConfigurationServi
                         filterRuleGroup.Select(fr => int.Parse(fr.Value)).ToList().Select(id => id.ToString()));
                     if (!string.IsNullOrEmpty(excludedTagsQuery))
                     {
-                        baseUrl = QueryPrefix(baseUrl);
-                        baseUrl += $"tags__id__none={excludedTagsQuery}";
+                        AppendQueryParameters(ref baseUrl, $"tags__id__none={excludedTagsQuery}");
                     }
                     break;
                 case RuleType.DocumentTypeIs:
@@ -158,26 +195,22 @@ public class PaperlessClient(HttpClient httpClient, IPaperlessConfigurationServi
                         filterRuleGroup.Select(fr => int.Parse(fr.Value)).ToList().Select(id => id.ToString()));
                     if (!string.IsNullOrEmpty(documentTypesQuery))
                     {
-                        baseUrl = QueryPrefix(baseUrl);
-                        baseUrl += $"document_type__id__in={documentTypesQuery}";
+                        AppendQueryParameters(ref baseUrl, $"document_type__id__in={documentTypesQuery}");
                     }
                     break;
                 case RuleType.CreatedFrom:
-                    baseUrl = QueryPrefix(baseUrl);
-                    baseUrl += $"created__date__gte={filterRuleGroup.First().Value}";
+                    AppendQueryParameters(ref baseUrl, $"created__date__gte={filterRuleGroup.First().Value}");
                     break;
                 case RuleType.CreatedTo:
-                    baseUrl = QueryPrefix(baseUrl);
-                    baseUrl += $"created__date__lte={filterRuleGroup.First().Value}";
+                    AppendQueryParameters(ref baseUrl, $"created__date__lte={filterRuleGroup.First().Value}");
                     break;
             }
         }
 
         if (!string.IsNullOrEmpty(view.Sort))
         {
-            baseUrl = QueryPrefix(baseUrl);
             var sortDirection = view.SortDescending ? "-" : "";
-            baseUrl += $"ordering={sortDirection}{view.Sort}";
+            AppendQueryParameters(ref baseUrl, $"ordering={sortDirection}{view.Sort}");
         }
         
         return await FilterDocuments(baseUrl, cancellationToken);
@@ -248,20 +281,6 @@ public class PaperlessClient(HttpClient httpClient, IPaperlessConfigurationServi
             }
         }
         return ms.ToArray();
-    }
-    
-    private static string QueryPrefix(string baseUrl)
-    {
-        if (baseUrl.Contains('?'))
-        {
-            baseUrl += "&";
-        }
-        else
-        {
-            baseUrl += "?";
-        }
-
-        return baseUrl;
     }
 
     private async Task<Dictionary<int, string>> GetLookup(string endpoint, CancellationToken cancellationToken = default)

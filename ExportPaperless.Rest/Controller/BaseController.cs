@@ -10,5 +10,16 @@ public class BaseController(ITokenProvider tokenProvider) : ControllerBase
         var apiKey = Request.Headers["x-api-key"].FirstOrDefault();
         tokenProvider.CurrentToken = apiKey;
     }
+    
+    private protected string GenerateExportFileName(string prefix, string extension = ".zip")
+    {
+        var fileName = $"Export_{prefix}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+        return fileName;
+    }
+    
+    protected CreatedAtActionResult CreateDownloadActionResult(string fingerprint)
+    {
+        return CreatedAtAction(actionName: nameof(DownloadController.DownloadStoredFile), controllerName: "Download", new { fingerprint }, fingerprint);
+    }
 
 }

@@ -14,7 +14,7 @@ public class ExcelExportService(IExcelExportConfigurationService configurationSe
     private const uint CellStyleNumber = 2;
     private const uint CellStyleUrl = 3;
 
-    public MemoryStream GenerateExcel(List<PaperlessDocument> documents, List<string> customFields)
+    public MemoryStream GenerateExcel(List<PaperlessDocument> documents, List<string>? customFields)
     {
         var headerRow = new Row();
         headerRow.Append(
@@ -27,9 +27,13 @@ public class ExcelExportService(IExcelExportConfigurationService configurationSe
             new Cell { CellValue = new CellValue("Filename"), DataType = CellValues.String },
             new Cell { CellValue = new CellValue("URL"), DataType = CellValues.String }
         );
-        foreach (var fieldName in customFields)
+
+        if (customFields != null)
         {
-            headerRow.Append(new Cell { CellValue = new CellValue(fieldName), DataType = CellValues.String });
+            foreach (var fieldName in customFields)
+            {
+                headerRow.Append(new Cell { CellValue = new CellValue(fieldName), DataType = CellValues.String });
+            }
         }
 
         var rows = new List<Row>();
@@ -60,11 +64,14 @@ public class ExcelExportService(IExcelExportConfigurationService configurationSe
             FormatCellAsHyperlink(doc.Url.ToString(), urlCell);
             row.Append(urlCell);
 
-            foreach (var fieldName in customFields)
+            if (customFields == null)
             {
-                CreateCellFromCustomFieldValue(doc, row, fieldName);
+                foreach (var fieldName in customFields)
+                {
+                    CreateCellFromCustomFieldValue(doc, row, fieldName);
+                }
             }
-            
+
             rows.Add(row);
         }
 

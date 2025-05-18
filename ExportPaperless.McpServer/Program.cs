@@ -1,6 +1,6 @@
-﻿using ExportPaperless.Domain.Services;
+﻿using ExportPaperless.Domain;
+using ExportPaperless.Domain.Services;
 using ExportPaperless.McpServer.Services;
-using ExportPaperless.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;

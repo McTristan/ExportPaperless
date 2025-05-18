@@ -7,13 +7,13 @@ public class ExportPaperlessService(IPaperlessClientFactory clientFactory, IExce
     : IExportPaperlessService
 {
     public async Task<byte[]> ExportByQuery(
-        DateTime from,
-        DateTime to,
-        List<string> includeTags,
-        List<string> excludeTags,
-        List<string> includeDocumentTypes,
-        List<string> includeCustomFields,
-        List<string> includeCorrespondents,
+        DateTime? from,
+        DateTime? to,
+        List<string>? includeTags,
+        List<string>? excludeTags,
+        List<string>? includeDocumentTypes,
+        List<string>? includeCustomFields,
+        List<string>? includeCorrespondents,
         CancellationToken cancellationToken)
     {
         var client = clientFactory.CreateClient();

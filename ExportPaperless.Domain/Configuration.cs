@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 
-namespace ExportPaperless.Services;
+namespace ExportPaperless.Domain;
 
 public static class Configuration
 {

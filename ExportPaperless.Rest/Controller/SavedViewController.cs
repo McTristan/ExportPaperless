@@ -22,17 +22,7 @@ public class SavedViewController(
         SetClientToken();
         
         var zipBytes = await exportPaperlessService.ExportSavedView(id, cancellationToken);
-        return File(zipBytes, "application/zip", GenerateExportFileName(id));
-    }
-    
-    [HttpGet("download/{fingerprint}")]
-    [AllowAnonymous]
-    public async Task<IActionResult> DownloadView([FromRoute] string fingerprint, CancellationToken cancellationToken)
-    {
-        SetClientToken();
-        
-        var (content, fileName, contentType) = await storageService.GetFile(fingerprint, true, cancellationToken);
-        return File(content, contentType, fileName);
+        return File(zipBytes, "application/zip", GenerateExportFileName(id.ToString()));
     }
 
     [HttpGet("")]
@@ -52,8 +42,8 @@ public class SavedViewController(
         SetClientToken();
         
         var zipBytes = await exportPaperlessService.ExportSavedView(id, cancellationToken);
-        var fingerprint = await storageService.StoreFile(GenerateExportFileName(id), zipBytes, cancellationToken);
-        return CreatedAtAction(nameof(DownloadView), new { fingerprint }, fingerprint);
+        var fingerprint = await storageService.StoreFile(GenerateExportFileName(id.ToString()), zipBytes, cancellationToken);
+        return CreateDownloadActionResult(fingerprint);
     }
 
     [HttpPost("store/metadata/{id}")]
@@ -62,14 +52,7 @@ public class SavedViewController(
         SetClientToken();
         
         var excelBytes = await exportPaperlessService.ExportSavedViewMetadata(id, cancellationToken);
-        var fingerprint = await storageService.StoreFile(GenerateExportFileName(id, ".xlsx"), excelBytes, cancellationToken);
-        return CreatedAtAction(nameof(DownloadView), new { fingerprint }, fingerprint);
+        var fingerprint = await storageService.StoreFile(GenerateExportFileName(id.ToString(), ".xlsx"), excelBytes, cancellationToken);
+        return CreateDownloadActionResult(fingerprint);
     }
-    
-    private static string GenerateExportFileName(int id, string extension = ".zip")
-    {
-        var fileName = $"Export_{id}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
-        return fileName;
-    }
-
 }
