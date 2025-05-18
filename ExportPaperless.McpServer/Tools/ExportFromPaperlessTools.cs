@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Net.Http.Json;
+using System.Runtime.Serialization;
 using System.Text.Json;
 using ExportPaperless.McpServer.DataContracts;
 using Microsoft.Extensions.AI;
@@ -75,15 +76,15 @@ public class ExportFromPaperlessTools
         [Description("The to date filter specifying to list all documents created before or at the given date")]
         DateTime? to,
         [Description("The tags to filter documents by, documents include all given tags")]
-        List<string>? includeTags,
+        List<string> includeTags,
         [Description("The tags to exclude documents by, documents must not have these given tags")]
-        List<string>? excludeTags,
+        List<string> excludeTags,
         [Description("The document types to filter documents by, documents must be of one of the given document types")]
-        List<string>? includeDocumentTypes,
+        List<string> includeDocumentTypes,
         [Description("The custom fields to filter documents by, documents must include all of the given custom fields")]
-        List<string>? includeCustomFields,
+        List<string> includeCustomFields,
         [Description("The correspondents to filter documents by, documents must include one of the given correspondents")]
-        List<string>? includeCorrespondents,
+        List<string> includeCorrespondents,
         CancellationToken cancellationToken)
     {
 

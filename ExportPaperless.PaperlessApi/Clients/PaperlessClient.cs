@@ -147,7 +147,7 @@ public class PaperlessClient(HttpClient httpClient, IPaperlessConfigurationServi
                 var paperlessDocument = new PaperlessDocument(doc.Id, doc.Title,
                     string.IsNullOrEmpty(doc.FileName) ? doc.OriginalFileName : doc.FileName, doc.Created,
                     correspondent, documentType, namedTags?.ToArray(), doc.Notes?.Select(n => n.Note).ToArray(),
-                    namedCustomFields, doc.PageCount, url);
+                    namedCustomFields, doc.PageCount ?? 1, url);
                
                 fullDocs.Add(paperlessDocument);
             }

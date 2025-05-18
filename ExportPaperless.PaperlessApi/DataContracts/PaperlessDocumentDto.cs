@@ -29,5 +29,5 @@ public class PaperlessDocumentDto
     public List<CustomFieldValueDto>? CustomFields { get; set; } = new();
     
     [JsonPropertyName("page_count")]
-    public int PageCount { get; set; }
+    public int? PageCount { get; set; }
 }
