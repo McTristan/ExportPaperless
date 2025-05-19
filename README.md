@@ -102,3 +102,6 @@ Can you export the saved view Invoices 2024 as excel for me?
 ```
 
 I guess you get the idea. What you will get in return (if everything works out) is a URL of .zip or .xlsx file which you can download (one time download).
+
+## MCP Server SSE
+When started the SSE server should be listening on port 5225, the url to connect to is http://localhost:5225/sse or the corresponding hostname or IP address of the machine.
