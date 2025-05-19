@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Net.Http.Json;
-using System.Runtime.Serialization;
 using System.Text.Json;
+using ExportPaperless.Mcp.DataContracts;
 using ExportPaperless.McpServer.DataContracts;
 using Microsoft.Extensions.AI;
 using ModelContextProtocol.Server;

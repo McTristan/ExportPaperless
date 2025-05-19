@@ -1,6 +1,6 @@
 ﻿using ExportPaperless.Domain;
-using ExportPaperless.Domain.Services;
-using ExportPaperless.McpServer.Services;
+using ExportPaperless.Mcp;
+using ExportPaperless.McpServer.Tools;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -22,22 +22,11 @@ try
     builder.Services.AddSerilog();
     var configuration = Configuration.GetStandardConfiguration();
     builder.Services.AddSingleton(configuration);
-    var mcpConfigurationService = new McpConfigurationService(configuration);
-    builder.Services.AddTransient<IMcpConfigurationService, McpConfigurationService>(b => mcpConfigurationService);
-    builder.Services.AddSingleton(_ =>
-    {
-        var httpClient = new HttpClient { BaseAddress = mcpConfigurationService.ExportPaperlessApiUrl };
-        if (!string.IsNullOrEmpty(mcpConfigurationService.ExportPaperlessApiToken))
-        {
-            httpClient.DefaultRequestHeaders.Add("x-api-key", mcpConfigurationService.ExportPaperlessApiToken);
-        }
-
-        return httpClient;
-    });
+    builder.Services.AddMcp(configuration);
     
     builder.Services.AddMcpServer()
         .WithStdioServerTransport()
-        .WithToolsFromAssembly();
+        .WithToolsFromAssembly(typeof(ExportFromPaperlessTools).Assembly);
 
     var app = builder.Build();
     

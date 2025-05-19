@@ -16,6 +16,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExportPaperless.Services", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExportPaperless.Storage", "ExportPaperless.Storage\ExportPaperless.Storage.csproj", "{4AA15CA6-B715-4B39-9827-1528E700F49A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExportPaperless.Mcp", "ExportPaperless.Mcp\ExportPaperless.Mcp.csproj", "{CA5AC03C-F92E-4E2F-850E-99C74BB7315A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExportPaperless.McpServer.SSE", "ExportPaperless.McpServer.SSE\ExportPaperless.McpServer.SSE.csproj", "{9C93E424-AC4D-4F41-93D0-477D74637E20}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,5 +58,13 @@ Global
 		{4AA15CA6-B715-4B39-9827-1528E700F49A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4AA15CA6-B715-4B39-9827-1528E700F49A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4AA15CA6-B715-4B39-9827-1528E700F49A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA5AC03C-F92E-4E2F-850E-99C74BB7315A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA5AC03C-F92E-4E2F-850E-99C74BB7315A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA5AC03C-F92E-4E2F-850E-99C74BB7315A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA5AC03C-F92E-4E2F-850E-99C74BB7315A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C93E424-AC4D-4F41-93D0-477D74637E20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C93E424-AC4D-4F41-93D0-477D74637E20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C93E424-AC4D-4F41-93D0-477D74637E20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C93E424-AC4D-4F41-93D0-477D74637E20}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -19,6 +19,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\ExportPaperless.Domain\ExportPaperless.Domain.csproj" />      
+      <ProjectReference Include="..\ExportPaperless.Mcp\ExportPaperless.Mcp.csproj" />      
     </ItemGroup>
 
 </Project>

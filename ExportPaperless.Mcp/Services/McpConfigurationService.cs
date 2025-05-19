@@ -1,7 +1,7 @@
 using ExportPaperless.Domain.Services;
 using Microsoft.Extensions.Configuration;
 
-namespace ExportPaperless.McpServer.Services;
+namespace ExportPaperless.Mcp.Services;
 
 public class McpConfigurationService(IConfiguration configuration): IMcpConfigurationService
 {
