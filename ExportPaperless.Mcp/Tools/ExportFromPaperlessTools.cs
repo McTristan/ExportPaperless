@@ -1,13 +1,13 @@
 using System.ComponentModel;
 using System.Net.Http.Json;
 using System.Text.Json;
+using ExportPaperless.Domain;
 using ExportPaperless.Mcp.DataContracts;
-using ExportPaperless.McpServer.DataContracts;
 using Microsoft.Extensions.AI;
 using ModelContextProtocol.Server;
 using Serilog;
 
-namespace ExportPaperless.McpServer.Tools;
+namespace ExportPaperless.Mcp.Tools;
 
 [McpServerToolType]
 public class ExportFromPaperlessTools
@@ -31,7 +31,7 @@ public class ExportFromPaperlessTools
         }
 
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-        var savedViewDtos = JsonSerializer.Deserialize<List<SavedViewDto>>(responseContent);
+        var savedViewDtos = JsonSerializer.Deserialize<List<SavedViewDto>>(responseContent, JsonOptions.Defaults());
 
         if (savedViewDtos == null)
         {

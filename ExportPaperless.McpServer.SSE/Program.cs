@@ -1,6 +1,6 @@
 using ExportPaperless.Domain;
 using ExportPaperless.Mcp;
-using ExportPaperless.McpServer.Tools;
+using ExportPaperless.Mcp.Tools;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;

@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-namespace ExportPaperless.McpServer.DataContracts;
+namespace ExportPaperless.Mcp.DataContracts;
 
 [DataContract]
 public class SavedViewDto
