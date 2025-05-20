@@ -1,6 +1,0 @@
-@ExportPaperless_HostAddress = http://localhost:5288
-
-GET {{ExportPaperless_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
