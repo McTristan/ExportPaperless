@@ -103,5 +103,25 @@ Can you export the saved view Invoices 2024 as excel for me?
 
 I guess you get the idea. What you will get in return (if everything works out) is a URL of .zip or .xlsx file which you can download (one time download).
 
+### Using the McpServer docker image
+
+```
+{
+  "mcpServers": {
+    "paperless-saved-view-exporter": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "mctristan/paperless-export-mcp-server:latest",
+        "-e MCP__EXPORT_PAPERLESS_API_URL=http://localhost:5288/"
+      ]
+    }
+  }
+}
+```
+
 ## MCP Server SSE
 When started the SSE server should be listening on port 5225, the url to connect to is http://localhost:5225/sse or the corresponding hostname or IP address of the machine.
+
