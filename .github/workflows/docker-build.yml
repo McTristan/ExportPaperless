@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build and Push Docker Images
 
 on:
   push:
@@ -7,12 +7,19 @@ on:
 
 jobs:
   build:
-    name: Build and Push Multi-Arch Image
+    name: Build and Push Multi-Arch Images
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       packages: write
+    
+    strategy:
+      matrix:
+        service: [
+          {name: 'paperless-export-api', dockerfile: 'Dockerfile'},
+          {name: 'paperless-export-mcp-server-sse', dockerfile: 'Dockerfile.McpServer.SSE'},
+          {name: 'paperless-export-mcp-server', dockerfile: 'Dockerfile.McpServer'},
+        ]
 
     steps:
       - name: Checkout code
@@ -38,8 +45,9 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ${{ matrix.service.dockerfile }}
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            mctristan/paperless-export-api:latest
-            mctristan/paperless-export-api:${{ env.VERSION }}
+            mctristan/${{ matrix.service.name }}:latest
+            mctristan/${{ matrix.service.name }}:${{ env.VERSION }}

@@ -1,0 +1,22 @@
+﻿FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+USER $APP_UID
+WORKDIR /app
+EXPOSE 5225
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+ARG BUILD_CONFIGURATION=Release
+WORKDIR /src
+COPY ["ExportPaperless.McpServer.SSE/ExportPaperless.McpServer.SSE.csproj", "ExportPaperless.McpServer.SSE/"]
+RUN dotnet restore "ExportPaperless.McpServer.SSE/ExportPaperless.McpServer.SSE.csproj"
+COPY . .
+WORKDIR "/src/ExportPaperless.McpServer.SSE"
+RUN dotnet build "./ExportPaperless.McpServer.SSE.csproj" -c $BUILD_CONFIGURATION -o /app/build
+
+FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "./ExportPaperless.McpServer.SSE.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "ExportPaperless.McpServer.SSE.dll"]
