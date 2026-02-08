@@ -1,7 +1,7 @@
 using ExportPaperless.Jobs;
 using ExportPaperless.Services;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Quartz;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -36,7 +36,8 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Paperless Export API", Version = "v1" });
 
-    c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+    var referenceId = "ApiKey";
+    c.AddSecurityDefinition(referenceId, new OpenApiSecurityScheme
     {
         Description =
             "API Key needed to access the endpoints. Use header: `x-api-key: {your token from paperless user profile}` or configure environment variable `PAPERLESS__API_TOKEN` on server side.",
@@ -46,15 +47,16 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "ApiKeyScheme"
     });
 
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    c.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
     {
         {
-            new OpenApiSecurityScheme
+            new OpenApiSecuritySchemeReference(referenceId)
             {
-                Reference = new OpenApiReference
+                Reference = new OpenApiReferenceWithDescription
                 {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "ApiKey"
+                    Type =  ReferenceType.SecurityScheme,
+                    Id = referenceId,
+                    Description = "API Key needed to access the endpoints. Use header: `x-api-key: {your token from paperless user profile}` or configure environment variable `PAPERLESS__API_TOKEN` on server side."  
                 }
             },
             []
@@ -71,5 +73,5 @@ app.UseSwaggerUI();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers().WithOpenApi();
+app.MapControllers();
 app.Run();
