@@ -158,36 +158,36 @@ public class ExcelExportService(IExcelExportConfigurationService configurationSe
 
             if (displayField.StartsWith("tag", StringComparison.OrdinalIgnoreCase))
             {
-                headerRow.Append(new Cell { CellValue = new CellValue("Tags"), DataType = CellValues.String });
+                headerRow.Append(new Cell { CellValue = new CellValue(configurationService.ReplacementTags), DataType = CellValues.String });
                 continue;
             }
 
             switch (displayField.ToUpperInvariant())
             {
                 case "TITLE":
-                    headerRow.Append(new Cell { CellValue = new CellValue("Title"), DataType = CellValues.String });
+                    headerRow.Append(new Cell { CellValue = new CellValue(configurationService.ReplacementTitle), DataType = CellValues.String });
                     break;
                 case "CREATED":
-                    headerRow.Append(new Cell { CellValue = new CellValue("Created"), DataType = CellValues.String });
+                    headerRow.Append(new Cell { CellValue = new CellValue(configurationService.ReplacementCreated), DataType = CellValues.String });
                     break;
                 case "NOTE":
-                    headerRow.Append(new Cell { CellValue = new CellValue("Notes"), DataType = CellValues.String });
+                    headerRow.Append(new Cell { CellValue = new CellValue(configurationService.ReplacementNotes), DataType = CellValues.String });
                     break;
                 case "DOCUMENTTYPE":
-                    headerRow.Append(new Cell { CellValue = new CellValue("Document Type"), DataType = CellValues.String });
+                    headerRow.Append(new Cell { CellValue = new CellValue(configurationService.ReplacementDocumentType), DataType = CellValues.String });
                     break;
                 case "CORRESPONDENT":
-                    headerRow.Append(new Cell { CellValue = new CellValue("Correspondent"), DataType = CellValues.String });
+                    headerRow.Append(new Cell { CellValue = new CellValue(configurationService.ReplacementCorrespondent), DataType = CellValues.String });
                     break;
                 case "PAGECOUNT":
-                    headerRow.Append(new Cell { CellValue = new CellValue("Page Count"), DataType = CellValues.String });
+                    headerRow.Append(new Cell { CellValue = new CellValue(configurationService.ReplacementPageCount), DataType = CellValues.String });
                     break;
             }
         }
 
         headerRow.Append(
-            new Cell { CellValue = new CellValue("Filename"), DataType = CellValues.String },
-            new Cell { CellValue = new CellValue("URL"), DataType = CellValues.String }
+            new Cell { CellValue = new CellValue(configurationService.ReplacementFileName), DataType = CellValues.String },
+            new Cell { CellValue = new CellValue(configurationService.ReplacementUrl), DataType = CellValues.String }
         );
         
         var rows = new List<Row>();

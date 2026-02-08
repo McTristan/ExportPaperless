@@ -40,9 +40,27 @@ The following additional environment variables are optional but useful:
 
 **EXCEL__DATE_FORMAT** <- how to export date formats to excel, can be a valid date (time) mask like yyyy-MM-dd, dd.MM.yyyy
 
-**EXCEL__STRIP_CURRENCY** <- currency values are stored as strings inside paperless, to get meaningful numbers out of it we need to strip the currency string i.e. EUR or USD from the string and try to parse the value as a double (only EUR and USD supported at the moment)
+**EXCEL__STRIP_CURRENCY** <- (boolean) currency values are stored as strings inside paperless, to get meaningful numbers out of it we need to strip the currency string i.e. EUR or USD from the string and try to parse the value as a double (only EUR and USD supported at the moment)
 
 **EXCEL__NUMBER_FORMAT** <- how to format numbers in Excel, can be a valid number mask like 0.00 (2 decimal places)
+
+**EXCEL__REPLACEMENT_TITLE** <- the name of the title column in the resulting excel file, default is "Title"
+
+**EXCEL__REPLACEMENT_TAGS** <- the name of the tags column in the resulting excel file, default is "Tags"
+
+**EXCEL__REPLACEMENT_CREATED** <- the name of the created date column in the resulting excel file, default is "Created"
+
+**EXCEL__REPLACEMENT_NOTES** <- the name of the notes column in the resulting excel file, default is "Notes"
+
+**EXCEL__REPLACEMENT_DOCUMENT_TYPE** <- the name of the document type column in the resulting excel file, default is "Document Type"
+
+**EXCEL__REPLACEMENT_CORRESPONDENT** <- the name of the correspondent column in the resulting excel file, default is "Correspondent"
+
+**EXCEL__REPLACEMENT_PAGE_COUNT** <- the name of the page count column in the resulting excel file, default is "Page Count"
+
+**EXCEL__REPLACEMENT_FILE_NAME** <- the name of the file name column in the resulting excel file, default is "Filename"
+
+**EXCEL__REPLACEMENT_URL** <- the name of the URL column in the resulting excel file, default is "URL"
 
 **STORAGE__DATA_PATH** <- where to store files for one-time downloads (see McpServer section)
 
