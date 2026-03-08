@@ -18,14 +18,14 @@ public class ExcelExportService(IExcelExportConfigurationService configurationSe
     {
         var headerRow = new Row();
         headerRow.Append(
-            new Cell { CellValue = new CellValue("Title"), DataType = CellValues.String },
-            new Cell { CellValue = new CellValue("Date"), DataType = CellValues.String },
-            new Cell { CellValue = new CellValue("Tags"), DataType = CellValues.String },
-            new Cell { CellValue = new CellValue("Correspondent"), DataType = CellValues.String },
-            new Cell { CellValue = new CellValue("Notes"), DataType = CellValues.String },
-            new Cell { CellValue = new CellValue("Document Type"), DataType = CellValues.String },
-            new Cell { CellValue = new CellValue("Filename"), DataType = CellValues.String },
-            new Cell { CellValue = new CellValue("URL"), DataType = CellValues.String }
+            new Cell { CellValue = new CellValue(configurationService.ReplacementTitle), DataType = CellValues.String },
+            new Cell { CellValue = new CellValue(configurationService.ReplacementCreated), DataType = CellValues.String },
+            new Cell { CellValue = new CellValue(configurationService.ReplacementTags), DataType = CellValues.String },
+            new Cell { CellValue = new CellValue(configurationService.ReplacementCorrespondent), DataType = CellValues.String },
+            new Cell { CellValue = new CellValue(configurationService.ReplacementNotes), DataType = CellValues.String },
+            new Cell { CellValue = new CellValue(configurationService.ReplacementDocumentType), DataType = CellValues.String },
+            new Cell { CellValue = new CellValue(configurationService.ReplacementFileName), DataType = CellValues.String },
+            new Cell { CellValue = new CellValue(configurationService.ReplacementUrl), DataType = CellValues.String }
         );
 
         if (customFields != null)
